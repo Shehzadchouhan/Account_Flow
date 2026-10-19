@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
-import { requireAdmin, requireAuth } from '@/utils/auth'
+import { assertAdmin, assertAuth } from '@/utils/auth'
 import {
   generateCasesSchema,
   updateCaseDetailsSchema,
@@ -33,7 +33,7 @@ export async function generateCasesAction(
   formData: FormData
 ): Promise<CaseActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const rawData = {
       month: formData.get('month') as string,
@@ -91,7 +91,7 @@ export async function receiveDocumentAction(
   caseId: string
 ): Promise<CaseActionState> {
   try {
-    await requireAuth()
+    await assertAuth()
 
     const supabase = await createClient()
     const { data, error } = await supabase.rpc('receive_document', {
@@ -125,7 +125,7 @@ export async function unreceiveDocumentAction(
   caseId: string
 ): Promise<CaseActionState> {
   try {
-    await requireAuth()
+    await assertAuth()
 
     const supabase = await createClient()
     const { data, error } = await supabase.rpc('unreceive_document', {
@@ -158,7 +158,7 @@ export async function bulkReceiveDocumentsAction(
   documentIds: string[]
 ): Promise<CaseActionState> {
   try {
-    await requireAuth()
+    await assertAuth()
 
     if (!documentIds || documentIds.length === 0) {
       return {
@@ -200,7 +200,7 @@ export async function updateCaseNotesAction(
   notes: string
 ): Promise<CaseActionState> {
   try {
-    await requireAuth()
+    await assertAuth()
 
     const parseResult = updateDocumentNotesSchema.safeParse({
       case_document_id: caseDocumentId,
@@ -246,7 +246,7 @@ export async function updateCaseDetailsAction(
   formData: FormData
 ): Promise<CaseActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const rawData = {
       case_id: formData.get('case_id') as string,
@@ -310,7 +310,7 @@ export async function addCaseDocumentAction(
   isRequired: boolean
 ): Promise<CaseActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const parseResult = addCaseDocumentSchema.safeParse({
       case_id: caseId,
@@ -366,7 +366,7 @@ export async function removeCaseDocumentAction(
   caseId: string
 ): Promise<CaseActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const supabase = await createClient()
     const { data, error } = await supabase.rpc('remove_case_document', {
@@ -401,7 +401,7 @@ export async function setDocumentRequiredAction(
   isRequired: boolean
 ): Promise<CaseActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const supabase = await createClient()
     const { data, error } = await supabase.rpc('set_document_required', {

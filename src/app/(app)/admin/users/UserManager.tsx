@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { updateUserProfileAction } from './actions'
 import { StatusBadge } from '@/components/StatusBadge'
 import type { UserRole } from '@/types/database.types'
@@ -39,6 +39,16 @@ export function UserManager({ profiles, currentUserId }: UserManagerProps) {
     setSelectedUser(null)
     setModalError(null)
   }
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && selectedUser) {
+        handleCloseModal()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedUser])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -184,11 +194,18 @@ export function UserManager({ profiles, currentUserId }: UserManagerProps) {
 
       {/* Edit User Modal Dialog */}
       {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-user-title"
+        >
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full p-6 space-y-6 animate-in fade-in zoom-in duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Edit Team Member</h3>
+                <h3 id="edit-user-title" className="text-lg font-bold text-slate-900">
+                  Edit Team Member
+                </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Update role permissions and account activation status
                 </p>
@@ -197,8 +214,9 @@ export function UserManager({ profiles, currentUserId }: UserManagerProps) {
                 type="button"
                 onClick={handleCloseModal}
                 className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                aria-label="Close dialog"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>

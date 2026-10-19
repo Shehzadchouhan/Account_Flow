@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { logout } from '@/app/auth/actions'
+import { GlobalSearch } from '@/components/GlobalSearch'
 
 interface NavItem {
   name: string
@@ -23,7 +24,7 @@ const navItems: NavItem[] = [
   },
   {
     name: 'Pending Work',
-    href: '/pending-work',
+    href: '/pending',
     icon: ({ className = 'w-5 h-5' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -268,6 +269,25 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
       {/* Main Content Area */}
       {/* ========================================================= */}
       <main className="flex-1 md:pl-64 flex flex-col min-h-screen">
+        {/* Top Sticky Header Bar with Global Search */}
+        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3 shadow-2xs">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex-1 max-w-xl">
+              <GlobalSearch />
+            </div>
+            <div className="hidden sm:flex items-center gap-4 text-xs font-medium text-slate-500">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-700 font-mono text-2xs">
+                <span>IST</span>
+                <span>UTC+05:30</span>
+              </span>
+              <span className="text-slate-300">|</span>
+              <span className="text-slate-600 truncate max-w-[200px]" title={userEmail}>
+                {userEmail}
+              </span>
+            </div>
+          </div>
+        </header>
+
         <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {children}
         </div>

@@ -1,31 +1,105 @@
 import type { Metadata } from 'next'
-import { EmptyStateCard } from '@/components/EmptyStateCard'
+import { createClient } from '@/utils/supabase/server'
+import { requireAuth } from '@/utils/auth'
+import {
+  getReportData,
+  type ReportType,
+  type ReportFilterParams,
+} from '@/lib/reports-data'
+import { ReportsViewer } from './ReportsViewer'
 
 export const metadata: Metadata = {
-  title: 'Reports & Registers | FinanceFlow',
-  description: 'Inward registers, dispatch records, and pending compliance reports',
+  title: 'Reports & Export Center | FinanceFlow',
+  description: 'Auditable compliance registers, dispatch records, and pendency analytics with Excel/CSV export',
 }
 
-export default function ReportsPage() {
+interface ReportsPageProps {
+  searchParams: Promise<{
+    report?: string
+    firm_id?: string
+    employee?: string
+    document_type_id?: string
+    status?: string
+    due_date_from?: string
+    due_date_to?: string
+    cycle?: string
+    month?: string
+  }>
+}
+
+function getMonthOptions(): { label: string; value: string }[] {
+  const options: { label: string; value: string }[] = []
+  const today = new Date()
+
+  for (let i = -11; i <= 3; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth() + i, 1)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const value = `${y}-${m}-01`
+    const label = d.toLocaleString('en-US', { month: 'short', year: 'numeric' })
+    options.push({ label, value })
+  }
+
+  return options
+}
+
+const VALID_REPORTS: ReportType[] = [
+  'pending_documents',
+  'completed_cases',
+  'dispatch_history',
+  'work_by_employee',
+  'received_not_dispatched',
+  'overdue_cases',
+]
+
+export default async function ReportsPage(props: ReportsPageProps) {
+  // 1. Authenticate user (all active staff and admin have access)
+  await requireAuth()
+  const searchParams = await props.searchParams
+  const supabase = await createClient()
+
+  // 2. Resolve active report selection
+  const rawReport = searchParams.report as ReportType | undefined
+  const activeReport: ReportType =
+    rawReport && VALID_REPORTS.includes(rawReport) ? rawReport : 'pending_documents'
+
+  const filters: ReportFilterParams = {
+    firm_id: searchParams.firm_id,
+    employee: searchParams.employee,
+    document_type_id: searchParams.document_type_id,
+    status: searchParams.status,
+    cycle: searchParams.cycle,
+    month: searchParams.month,
+    due_date_from: searchParams.due_date_from,
+    due_date_to: searchParams.due_date_to,
+  }
+
+  // 3. Parallel fetch of dropdown metadata and active report dataset
+  const [firmsRes, staffRes, docTypesRes, dataset] = await Promise.all([
+    supabase.from('firms').select('id, name').order('name', { ascending: true }),
+    supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('is_active', true)
+      .order('full_name', { ascending: true }),
+    supabase.from('document_types').select('id, name').order('name', { ascending: true }),
+    getReportData(supabase, activeReport, filters),
+  ])
+
+  const firms = firmsRes.data || []
+  const staff = staffRes.data || []
+  const documentTypes = docTypesRes.data || []
+  const monthOptions = getMonthOptions()
+
   return (
-    <div className="space-y-6">
-      <EmptyStateCard
-        title="Reports &amp; Dispatch Registers"
-        subtitle="Auditable registers of all incoming physical files and outgoing consignments"
-        phaseText="PLANNED FOR PHASE 5"
-        description="No reports generated yet. In Phase 5, this reporting engine will generate periodic inward registers, speed post logs, courier summaries, and pendency analytics."
-        plannedFeatures={[
-          'Daily and monthly Inward Document Register export (PDF/Excel)',
-          'Postal & Courier Dispatch Register with consignment numbers and delivery proofs',
-          'Staff pendency reports: files pending review over 7, 15, and 30 days',
-          'Audit trail reports showing user edits, date stamps, and dispatch statuses',
-        ]}
-        icon={({ className }) => (
-          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        )}
-      />
-    </div>
+    <ReportsViewer
+      activeReport={activeReport}
+      filters={filters}
+      dataset={dataset}
+      firms={firms}
+      staff={staff}
+      documentTypes={documentTypes}
+      monthOptions={monthOptions}
+    />
   )
 }

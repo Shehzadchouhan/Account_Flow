@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
-import { requireAdmin } from '@/utils/auth'
+import { assertAdmin } from '@/utils/auth'
 import { firmSchema } from '@/lib/validations/firm'
 import { templateItemSchema } from '@/lib/validations/templateItem'
 
@@ -29,7 +29,7 @@ export async function createFirmAction(
   formData: FormData
 ): Promise<ActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const rawData = {
       name: formData.get('name') as string,
@@ -99,7 +99,7 @@ export async function updateFirmAction(
   formData: FormData
 ): Promise<ActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const rawData = {
       name: formData.get('name') as string,
@@ -164,7 +164,7 @@ export async function toggleFirmActiveAction(
   isActive: boolean
 ): Promise<ActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const supabase = await createClient()
     const { error } = await supabase
@@ -199,7 +199,7 @@ export async function addTemplateItemAction(
   isRequired: boolean
 ): Promise<ActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const parseResult = templateItemSchema.safeParse({
       firm_id: firmId,
@@ -253,7 +253,7 @@ export async function updateTemplateItemAction(
   isRequired: boolean
 ): Promise<ActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const supabase = await createClient()
     const { error } = await supabase
@@ -287,7 +287,7 @@ export async function removeTemplateItemAction(
   firmId: string
 ): Promise<ActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const supabase = await createClient()
     const { error } = await supabase

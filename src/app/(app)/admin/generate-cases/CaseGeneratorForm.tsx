@@ -344,10 +344,17 @@ export function CaseGeneratorForm() {
 
       {/* Confirmation Modal */}
       {showConfirmModal && previewResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-case-gen-title"
+        >
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in duration-150">
             <div>
-              <h4 className="text-lg font-bold text-slate-900">Confirm Case Generation</h4>
+              <h4 id="confirm-case-gen-title" className="text-lg font-bold text-slate-900">
+                Confirm Case Generation
+              </h4>
               <p className="text-xs text-slate-600 mt-1">
                 You are about to generate <strong>{previewResult.created_count} new cases</strong> for{' '}
                 <strong>{previewResult.period_month}</strong> ({previewResult.cycle}).

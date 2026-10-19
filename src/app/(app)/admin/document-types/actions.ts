@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
-import { requireAdmin } from '@/utils/auth'
+import { assertAdmin } from '@/utils/auth'
 import { documentTypeSchema } from '@/lib/validations/documentType'
 
 export interface DocumentTypeActionState {
@@ -26,7 +26,7 @@ export async function createDocumentTypeAction(
   formData: FormData
 ): Promise<DocumentTypeActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const rawData = {
       name: formData.get('name') as string,
@@ -82,7 +82,7 @@ export async function updateDocumentTypeAction(
   formData: FormData
 ): Promise<DocumentTypeActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const rawData = {
       name: formData.get('name') as string,
@@ -141,7 +141,7 @@ export async function toggleDocumentTypeActiveAction(
   isActive: boolean
 ): Promise<DocumentTypeActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const supabase = await createClient()
     const { error } = await supabase

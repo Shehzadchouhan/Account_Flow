@@ -526,9 +526,14 @@ export function CaseChecklistTable({
 
       {/* Single Action Confirmation Modal */}
       {singleConfirmDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="single-action-modal-title"
+        >
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in duration-150">
-            <h4 className="text-lg font-bold text-slate-900">
+            <h4 id="single-action-modal-title" className="text-lg font-bold text-slate-900">
               Confirm {singleConfirmDoc.action === 'receive' ? 'Document Receipt' : singleConfirmDoc.action === 'unreceive' ? 'Undo Receipt' : 'Remove Document'}
             </h4>
 
@@ -577,10 +582,15 @@ export function CaseChecklistTable({
 
       {/* Bulk Receive Confirmation Modal */}
       {showBulkModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="bulk-receive-modal-title"
+        >
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full p-6 space-y-5 animate-in fade-in zoom-in duration-150">
             <div>
-              <h4 className="text-lg font-bold text-slate-900">
+              <h4 id="bulk-receive-modal-title" className="text-lg font-bold text-slate-900">
                 Bulk Receive Documents ({selectedIds.length})
               </h4>
               <p className="text-xs text-slate-500 mt-1">
@@ -620,10 +630,17 @@ export function CaseChecklistTable({
 
       {/* Admin Add Document Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-doc-modal-title"
+        >
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in duration-150">
             <div>
-              <h4 className="text-lg font-bold text-slate-900">Add Document to Case</h4>
+              <h4 id="add-doc-modal-title" className="text-lg font-bold text-slate-900">
+                Add Document to Case
+              </h4>
               <p className="text-xs text-slate-500 mt-1">
                 Select an unconfigured active document type from the master catalog to attach to this docket.
               </p>

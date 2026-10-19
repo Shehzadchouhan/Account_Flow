@@ -69,9 +69,10 @@ BEGIN
   SELECT p.id INTO v_admin_id
   FROM public.profiles p
   JOIN auth.users u ON u.id = p.id
-  WHERE u.email = v_admin_email AND p.role = 'admin';
+  WHERE u.email = v_admin_email AND p.role = 'admin'
+  LIMIT 1;
 
-  -- Fallback: If specified email not found, look up any existing admin
+  -- Fallback 1: If specified email not found, look up any existing admin
   IF v_admin_id IS NULL THEN
     SELECT id INTO v_admin_id
     FROM public.profiles
@@ -79,15 +80,35 @@ BEGIN
     LIMIT 1;
   END IF;
 
+  -- Fallback 2: If no admin found, promote the first existing user profile to active admin
   IF v_admin_id IS NULL THEN
-    RAISE NOTICE '=============================================================================';
-    RAISE NOTICE 'SEED SKIPPED: No admin profile found in public.profiles.';
-    RAISE NOTICE 'To apply seed data:';
-    RAISE NOTICE '1. Sign up a user in Supabase Auth.';
-    RAISE NOTICE '2. Run: UPDATE public.profiles SET role = ''admin'', is_active = true WHERE id = ''<user_id>'';';
-    RAISE NOTICE '3. Re-run supabase/seed.sql.';
-    RAISE NOTICE '=============================================================================';
-    RETURN;
+    SELECT id INTO v_admin_id FROM public.profiles LIMIT 1;
+    IF v_admin_id IS NOT NULL THEN
+      UPDATE public.profiles SET role = 'admin', is_active = true WHERE id = v_admin_id;
+      RAISE NOTICE 'Auto-promoted existing user profile % to admin.', v_admin_id;
+    END IF;
+  END IF;
+
+  -- Fallback 3: If public.profiles is completely empty, create default admin user
+  IF v_admin_id IS NULL THEN
+    v_admin_id := '00000000-0000-0000-0000-000000000001'::uuid;
+    INSERT INTO auth.users (
+      instance_id, id, aud, role, email, encrypted_password,
+      email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    )
+    VALUES (
+      '00000000-0000-0000-0000-000000000000', v_admin_id, 'authenticated', 'authenticated',
+      'admin@financeflow.local', 'fake_password_hash', now(),
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      '{"full_name":"FinanceFlow Administrator"}'::jsonb, now(), now()
+    )
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO public.profiles (id, email, full_name, role, is_active)
+    VALUES (v_admin_id, 'admin@financeflow.local', 'FinanceFlow Administrator', 'admin', true)
+    ON CONFLICT (id) DO UPDATE SET role = 'admin', is_active = true, email = 'admin@financeflow.local';
+
+    RAISE NOTICE 'Created default admin profile % (admin@financeflow.local).', v_admin_id;
   END IF;
 
   RAISE NOTICE 'Seeding database using Admin Profile ID: %', v_admin_id;
@@ -103,14 +124,13 @@ BEGIN
     ('GSTR-3B Summary', 'Monthly summary return computation sheet', true),
     ('Expense Vouchers', 'Cash petty vouchers and office operational bills', true)
   ON CONFLICT (LOWER(TRIM(name))) DO UPDATE
-    SET description = EXCLUDED.description
-  RETURNING id INTO v_dt_sales;
+    SET description = EXCLUDED.description;
 
-  SELECT id INTO v_dt_sales FROM public.document_types WHERE name = 'Sales Register';
-  SELECT id INTO v_dt_purchase FROM public.document_types WHERE name = 'Purchase Register';
-  SELECT id INTO v_dt_bank FROM public.document_types WHERE name = 'Bank Statement';
-  SELECT id INTO v_dt_gstr3b FROM public.document_types WHERE name = 'GSTR-3B Summary';
-  SELECT id INTO v_dt_expense FROM public.document_types WHERE name = 'Expense Vouchers';
+  SELECT id INTO v_dt_sales FROM public.document_types WHERE name = 'Sales Register' LIMIT 1;
+  SELECT id INTO v_dt_purchase FROM public.document_types WHERE name = 'Purchase Register' LIMIT 1;
+  SELECT id INTO v_dt_bank FROM public.document_types WHERE name = 'Bank Statement' LIMIT 1;
+  SELECT id INTO v_dt_gstr3b FROM public.document_types WHERE name = 'GSTR-3B Summary' LIMIT 1;
+  SELECT id INTO v_dt_expense FROM public.document_types WHERE name = 'Expense Vouchers' LIMIT 1;
 
   -- ---------------------------------------------------------------------------
   -- 3. Seed Client Firms (Fake Indian Business Entities)

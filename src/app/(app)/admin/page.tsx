@@ -29,8 +29,12 @@ export default async function AdminPage() {
     .from('cases')
     .select('*', { count: 'exact', head: true })
 
+  const { count: activityLogsCount } = await supabase
+    .from('activity_logs')
+    .select('*', { count: 'exact', head: true })
+
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto">
       {/* Top Banner */}
       <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -88,7 +92,7 @@ export default async function AdminPage() {
       </Link>
 
       {/* Administration Hub Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* User Administration Card */}
         <Link
           href="/admin/users"
@@ -111,7 +115,7 @@ export default async function AdminPage() {
           </div>
 
           <h2 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center justify-between">
-            <span>User Administration &amp; Roles</span>
+            <span>Users</span>
             <svg
               className="w-5 h-5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"
               fill="none"
@@ -122,7 +126,7 @@ export default async function AdminPage() {
             </svg>
           </h2>
           <p className="mt-2 text-xs text-slate-600 leading-relaxed">
-            Activate registered staff accounts, designate administrators or standard staff, and maintain user profiles. Protected by database last-admin triggers.
+            Activate staff accounts, manage roles, and maintain user profiles protected by last-admin guards.
           </p>
         </Link>
 
@@ -148,7 +152,7 @@ export default async function AdminPage() {
           </div>
 
           <h2 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center justify-between">
-            <span>Document Types Catalog</span>
+            <span>Doc Types</span>
             <svg
               className="w-5 h-5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"
               fill="none"
@@ -159,7 +163,81 @@ export default async function AdminPage() {
             </svg>
           </h2>
           <p className="mt-2 text-xs text-slate-600 leading-relaxed">
-            Configure master document types (Sales Register, Bank Statement, etc.) used in firm templates. Supports rename and deactivation with zero hard deletion.
+            Configure master document types used across all compliance firm checklists.
+          </p>
+        </Link>
+
+        {/* Batch Firm Importer Card */}
+        <Link
+          href="/admin/import"
+          className="group block p-6 bg-white rounded-xl border border-slate-200 shadow-2xs hover:border-emerald-500 hover:shadow-md transition-all"
+        >
+          <div className="flex items-start justify-between">
+            <div className="p-3 bg-emerald-50 text-emerald-700 rounded-xl group-hover:bg-emerald-100 transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                />
+              </svg>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+              Batch Tool
+            </span>
+          </div>
+
+          <h2 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors flex items-center justify-between">
+            <span>Firm Importer</span>
+            <svg
+              className="w-5 h-5 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </h2>
+          <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+            Upload .xlsx or .csv files to bulk-register client firms with templates and validation reports.
+          </p>
+        </Link>
+
+        {/* System Activity & Audit Log Card */}
+        <Link
+          href="/admin/activity"
+          className="group block p-6 bg-white rounded-xl border border-slate-200 shadow-2xs hover:border-blue-500 hover:shadow-md transition-all"
+        >
+          <div className="flex items-start justify-between">
+            <div className="p-3 bg-slate-100 text-slate-800 rounded-xl group-hover:bg-slate-200 transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+              {activityLogsCount || 0} Events
+            </span>
+          </div>
+
+          <h2 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center justify-between">
+            <span>Activity Log</span>
+            <svg
+              className="w-5 h-5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </h2>
+          <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+            Forensic audit trail with actor filtering, entity deep-links, and payload inspection.
           </p>
         </Link>
       </div>

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { getCurrentUserRole } from '@/utils/auth'
 import { StatusBadge } from '@/components/StatusBadge'
+import { getTodayIST } from '@/lib/date-utils'
 import type { CaseStatusType, CaseCycle } from '@/types/database.types'
 
 export const metadata: Metadata = {
@@ -18,6 +19,9 @@ interface CasesPageProps {
     employee?: string
     firm_id?: string
     overdue?: string
+    due_today?: string
+    attention?: string
+    active_only?: string
     search?: string
     page?: string
   }>
@@ -151,8 +155,23 @@ export default async function CasesPage(props: CasesPageProps) {
     query = query.eq('firm_id', firmFilter)
   }
 
+  // Filter active firms only unless explicitly requested all
+  if (searchParams.active_only !== 'false') {
+    query = query.eq('firm_is_active', true)
+  }
+
   if (overdueOnly) {
     query = query.eq('is_overdue', true)
+  }
+
+  const todayIST = getTodayIST()
+
+  if (searchParams.due_today === 'true') {
+    query = query.eq('due_date', todayIST).neq('status', 'Completed')
+  }
+
+  if (searchParams.attention === 'true') {
+    query = query.or(`is_overdue.eq.true,and(due_date.eq.${todayIST},status.neq.Completed)`)
   }
 
   if (search) {
@@ -177,6 +196,8 @@ export default async function CasesPage(props: CasesPageProps) {
       employeeFilter !== 'all' ||
       firmFilter !== 'all' ||
       overdueOnly ||
+      searchParams.due_today === 'true' ||
+      searchParams.attention === 'true' ||
       search
   )
 
@@ -337,6 +358,16 @@ export default async function CasesPage(props: CasesPageProps) {
               <label htmlFor="overdue" className="text-slate-700 font-medium cursor-pointer">
                 Show Overdue Cases Only (past due in Asia/Kolkata)
               </label>
+              {searchParams.due_today === 'true' && (
+                <span className="ml-2 px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                  Filtering: Due Today
+                </span>
+              )}
+              {searchParams.attention === 'true' && (
+                <span className="ml-2 px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+                  Filtering: Needing Attention
+                </span>
+              )}
             </div>
 
             {hasFilters && (

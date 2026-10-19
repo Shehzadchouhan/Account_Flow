@@ -5,6 +5,19 @@ import type { UserRole } from '@/types/database.types'
 
 export type { UserRole }
 
+export interface UserProfile {
+  id: string
+  email: string | null
+  full_name: string
+  role: UserRole
+  is_active: boolean
+}
+
+export interface UserContext {
+  user: User
+  profile: UserProfile
+}
+
 /**
  * Retrieves the currently authenticated Supabase user on the server.
  * Returns null if the user is unauthenticated or has an invalid session.
@@ -23,22 +36,52 @@ export async function getCurrentUser(): Promise<User | null> {
 
     return user
   } catch (error) {
-    // Fail closed if Supabase cannot be reached
     console.error('Error fetching current user:', error)
     return null
   }
 }
 
 /**
- * Server-side helper to ensure the user is authenticated.
- * Enforces authentication on the server layer in addition to middleware.
+ * Retrieves the full user context including profile, role, and active status.
+ * Fails safely by returning null if unauthenticated or profile not found.
  */
-export async function requireAuth(): Promise<User> {
+export async function getCurrentUserProfile(): Promise<UserContext | null> {
   const user = await getCurrentUser()
   if (!user) {
-    redirect('/login')
+    return null
   }
-  return user
+
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, role, is_active')
+      .eq('id', user.id)
+      .single()
+
+    if (error || !data) {
+      // Fallback: check user metadata
+      const metaRole = (user.user_metadata?.role as UserRole) || 'staff'
+      return {
+        user,
+        profile: {
+          id: user.id,
+          email: user.email || null,
+          full_name: user.user_metadata?.full_name || user.email || 'User',
+          role: metaRole,
+          is_active: true,
+        },
+      }
+    }
+
+    return {
+      user,
+      profile: data as UserProfile,
+    }
+  } catch (err) {
+    console.error('Error querying profiles table for user context:', err)
+    return null
+  }
 }
 
 /**
@@ -46,44 +89,80 @@ export async function requireAuth(): Promise<User> {
  * Falls back safely to 'staff' if unauthenticated or on fetch error.
  */
 export async function getCurrentUserRole(): Promise<UserRole> {
-  const user = await getCurrentUser()
-  if (!user) {
-    return 'staff'
-  }
-
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (error || !data) {
-      // Fallback: check user metadata or default to 'staff'
-      const metaRole = user.user_metadata?.role as UserRole | undefined
-      return metaRole === 'admin' ? 'admin' : 'staff'
-    }
-
-    return (data.role as UserRole) || 'staff'
-  } catch (err) {
-    console.error('Error querying profiles table for role:', err)
-    return 'staff'
-  }
+  const ctx = await getCurrentUserProfile()
+  return ctx?.profile.role || 'staff'
 }
 
 /**
- * Server-side guard to ensure the current user has the 'admin' role.
- * Redirects unauthenticated users to /login and unauthorized non-admin users to /.
+ * Server action / API assertion: Verifies caller is authenticated and active.
+ * Throws explicit Error rather than redirecting, ideal for try/catch server actions.
  */
-export async function requireAdmin(): Promise<User> {
-  const user = await requireAuth()
-  const role = await getCurrentUserRole()
+export async function assertAuth(): Promise<UserContext> {
+  const ctx = await getCurrentUserProfile()
+  if (!ctx) {
+    throw new Error('Unauthorized: Authentication required.')
+  }
+  if (!ctx.profile.is_active) {
+    throw new Error('Unauthorized: Account is deactivated.')
+  }
+  return ctx
+}
 
-  if (role !== 'admin') {
-    // Non-admin users are denied access and redirected to the main dashboard
-    redirect('/')
+/**
+ * Server action / API assertion: Verifies caller is authenticated, active, and has 'admin' role.
+ * Throws explicit Error rather than redirecting, ideal for try/catch server actions.
+ */
+export async function assertAdmin(): Promise<UserContext> {
+  const ctx = await assertAuth()
+  if (ctx.profile.role !== 'admin') {
+    throw new Error('Forbidden: Administrator privileges required.')
+  }
+  return ctx
+}
+
+/**
+ * Page route guard to ensure the user is authenticated and active.
+ * Redirects unauthenticated users to /login and inactive users to /login?error=account_deactivated.
+ */
+export async function requireAuth(options?: { redirectOnFail?: boolean }): Promise<User> {
+  const shouldRedirect = options?.redirectOnFail !== false
+  const ctx = await getCurrentUserProfile()
+
+  if (!ctx) {
+    if (shouldRedirect) redirect('/login')
+    throw new Error('Unauthorized: Authentication required.')
   }
 
-  return user
+  if (!ctx.profile.is_active) {
+    if (shouldRedirect) redirect('/login?error=account_deactivated')
+    throw new Error('Unauthorized: Account is deactivated.')
+  }
+
+  return ctx.user
+}
+
+/**
+ * Page route guard to ensure the current user has the 'admin' role and is active.
+ * Redirects unauthenticated users to /login and non-admin users to /.
+ */
+export async function requireAdmin(options?: { redirectOnFail?: boolean }): Promise<User> {
+  const shouldRedirect = options?.redirectOnFail !== false
+  const ctx = await getCurrentUserProfile()
+
+  if (!ctx) {
+    if (shouldRedirect) redirect('/login')
+    throw new Error('Unauthorized: Authentication required.')
+  }
+
+  if (!ctx.profile.is_active) {
+    if (shouldRedirect) redirect('/login?error=account_deactivated')
+    throw new Error('Unauthorized: Account is deactivated.')
+  }
+
+  if (ctx.profile.role !== 'admin') {
+    if (shouldRedirect) redirect('/')
+    throw new Error('Forbidden: Administrator privileges required.')
+  }
+
+  return ctx.user
 }

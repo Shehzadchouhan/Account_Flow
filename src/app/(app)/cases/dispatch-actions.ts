@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
-import { requireAdmin, requireAuth } from '@/utils/auth'
+import { assertAdmin, assertAuth } from '@/utils/auth'
 import { createDispatchSchema, voidDispatchSchema } from '@/lib/validations/dispatch'
 
 export interface DispatchActionState {
@@ -28,7 +28,7 @@ export async function createDispatchAction(
   formData: FormData
 ): Promise<DispatchActionState> {
   try {
-    await requireAuth()
+    await assertAuth()
 
     // Handle document IDs whether passed as multiple fields, comma-separated, or JSON array
     const rawDocIds: string[] = []
@@ -114,7 +114,7 @@ export async function voidDispatchAction(
   formData: FormData
 ): Promise<DispatchActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const rawData = {
       dispatch_id: formData.get('dispatch_id') as string,
@@ -166,7 +166,7 @@ export async function voidDispatchAction(
  */
 export async function getDistinctRecipientsAction(): Promise<string[]> {
   try {
-    await requireAuth()
+    await assertAuth()
     const supabase = await createClient()
     const { data, error } = await supabase.rpc('get_distinct_recipients')
     if (error || !data) {

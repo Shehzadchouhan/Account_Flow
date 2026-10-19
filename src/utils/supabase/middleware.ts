@@ -16,7 +16,11 @@ export async function updateSession(request: NextRequest) {
   // If environment variables are not yet configured, redirect protected routes to /login
   if (!supabaseUrl || !supabaseAnonKey) {
     const isPublic = request.nextUrl.pathname === '/login'
+    const isApi = request.nextUrl.pathname.startsWith('/api')
     if (!isPublic) {
+      if (isApi) {
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      }
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       return NextResponse.redirect(url)
@@ -49,9 +53,13 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const isLoginPage = pathname === '/login'
   const isAuthRoute = pathname.startsWith('/auth')
+  const isApiRoute = pathname.startsWith('/api')
 
-  // Unauthenticated user attempting to access protected route -> redirect to /login
+  // Unauthenticated user attempting to access protected route
   if (!user && !isLoginPage && !isAuthRoute) {
+    if (isApiRoute) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     // Preserve attempted destination as redirect parameter if needed

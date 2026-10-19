@@ -76,3 +76,62 @@ export function toInputDateTimeLocalIST(date: Date = new Date()): string {
     return date.toISOString().slice(0, 16)
   }
 }
+
+/**
+ * Returns YYYY-MM-DD string representing today's date in Asia/Kolkata timezone.
+ */
+export function getTodayIST(date: Date = new Date()): string {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(date)
+    const year = parts.find((p) => p.type === 'year')?.value || '2026'
+    const month = parts.find((p) => p.type === 'month')?.value || '10'
+    const day = parts.find((p) => p.type === 'day')?.value || '19'
+    return `${year}-${month}-${day}`
+  } catch {
+    return date.toISOString().slice(0, 10)
+  }
+}
+
+/**
+ * Returns YYYY-MM-01 string representing current month in Asia/Kolkata timezone.
+ */
+export function getCurrentMonthIST(date: Date = new Date()): string {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+    }).formatToParts(date)
+    const year = parts.find((p) => p.type === 'year')?.value || '2026'
+    const month = parts.find((p) => p.type === 'month')?.value || '10'
+    return `${year}-${month}-01`
+  } catch {
+    return `${date.toISOString().slice(0, 7)}-01`
+  }
+}
+
+/**
+ * Returns the statutory due date for a given period month and cycle.
+ * Cycle A_11th -> 11th of the month
+ * Cycle B_20th -> 20th of the month
+ */
+export function getCycleDueDate(periodMonth: string, cycle: 'A_11th' | 'B_20th'): string {
+  const monthPrefix = periodMonth.slice(0, 7)
+  const day = cycle === 'A_11th' ? '11' : '20'
+  return `${monthPrefix}-${day}`
+}
+
+/**
+ * Returns human-readable label for statutory cycle
+ */
+export function formatCycleLabel(cycle: string | null | undefined): string {
+  if (cycle === 'A_11th') return 'Cycle A (11th of month)'
+  if (cycle === 'B_20th') return 'Cycle B (20th of month)'
+  return cycle || '—'
+}
+

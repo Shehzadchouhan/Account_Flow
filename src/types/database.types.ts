@@ -322,6 +322,13 @@ export interface Database {
           case_document_id: string
           case_id: string
           firm_id: string
+          firm_name: string
+          firm_is_active: boolean
+          period_month: string
+          cycle: CaseCycle
+          due_date: string
+          assigned_to: string | null
+          assigned_to_name: string | null
           document_type_id: string
           document_type_name: string
           is_required: boolean
@@ -331,6 +338,7 @@ export interface Database {
           created_at: string
           updated_at: string
           status: CaseDocumentStatusType
+          is_overdue: boolean
         }
       }
       case_status: {
@@ -451,6 +459,21 @@ export interface Database {
           p_version: number
         }
         Returns: Json
+      }
+      import_firms_batch: {
+        Args: {
+          p_rows: Json
+          p_create_missing_doc_types?: boolean
+        }
+        Returns: Json
+      }
+      log_export_activity: {
+        Args: {
+          p_report_name: string
+          p_filters: Json
+          p_row_count: number
+        }
+        Returns: boolean
       }
     }
   }

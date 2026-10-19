@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
-import { requireAdmin } from '@/utils/auth'
+import { assertAdmin } from '@/utils/auth'
 import { userProfileUpdateSchema } from '@/lib/validations/profile'
 
 export interface UserActionState {
@@ -28,7 +28,7 @@ export async function updateUserProfileAction(
   formData: FormData
 ): Promise<UserActionState> {
   try {
-    await requireAdmin()
+    await assertAdmin()
 
     const rawData = {
       full_name: formData.get('full_name') as string,
