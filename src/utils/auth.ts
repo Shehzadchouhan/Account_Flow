@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import type { User } from '@supabase/supabase-js'
+import type { UserRole } from '@/types/database.types'
 
-export type UserRole = 'admin' | 'staff'
+export type { UserRole }
 
 /**
  * Retrieves the currently authenticated Supabase user on the server.
@@ -41,27 +42,8 @@ export async function requireAuth(): Promise<User> {
 }
 
 /**
- * Retrieves the role for the current user.
- * 
- * =========================================================================
- * TODO: Phase 2 - Database Integration
- * =========================================================================
- * In Phase 2, when the 'profiles' table is created with a 'role' column,
- * this function should query the database:
- * 
- *   const supabase = await createClient()
- *   const { data, error } = await supabase
- *     .from('profiles')
- *     .select('role')
- *     .eq('id', user.id)
- *     .single()
- *   if (error || !data) return 'staff'
- *   return data.role as UserRole
- * =========================================================================
- * 
- * For Phase 1 skeleton:
- * Reads role from user_metadata if available, otherwise defaults to 'admin'
- * so the guarded /admin page and role permissions can be demonstrated and verified.
+ * Retrieves the role for the current user directly from the 'profiles' table.
+ * Falls back safely to 'staff' if unauthenticated or on fetch error.
  */
 export async function getCurrentUserRole(): Promise<UserRole> {
   const user = await getCurrentUser()
@@ -69,14 +51,25 @@ export async function getCurrentUserRole(): Promise<UserRole> {
     return 'staff'
   }
 
-  // Check if role was specified in user metadata during sign-in/creation
-  const metaRole = user.user_metadata?.role as UserRole | undefined
-  if (metaRole === 'admin' || metaRole === 'staff') {
-    return metaRole
-  }
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
 
-  // Phase 1 fallback default
-  return 'admin'
+    if (error || !data) {
+      // Fallback: check user metadata or default to 'staff'
+      const metaRole = user.user_metadata?.role as UserRole | undefined
+      return metaRole === 'admin' ? 'admin' : 'staff'
+    }
+
+    return (data.role as UserRole) || 'staff'
+  } catch (err) {
+    console.error('Error querying profiles table for role:', err)
+    return 'staff'
+  }
 }
 
 /**
