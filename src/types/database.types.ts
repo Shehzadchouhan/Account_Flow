@@ -187,6 +187,10 @@ export interface Database {
           received_at: string | null
           received_by: string | null
           notes: string | null
+          file_url: string | null
+          file_name: string | null
+          file_size: number | null
+          file_type: string | null
           removed_at: string | null
           created_at: string
           updated_at: string
@@ -199,6 +203,10 @@ export interface Database {
           received_at?: string | null
           received_by?: string | null
           notes?: string | null
+          file_url?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
           removed_at?: string | null
           created_at?: string
           updated_at?: string
@@ -211,6 +219,10 @@ export interface Database {
           received_at?: string | null
           received_by?: string | null
           notes?: string | null
+          file_url?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
           removed_at?: string | null
           created_at?: string
           updated_at?: string
@@ -224,6 +236,8 @@ export interface Database {
           sent_at: string
           recorded_by: string
           email_reference: string | null
+          receipt_file_url: string | null
+          receipt_file_name: string | null
           idempotency_key: string | null
           voided_at: string | null
           voided_by: string | null
@@ -238,6 +252,8 @@ export interface Database {
           sent_at?: string
           recorded_by: string
           email_reference?: string | null
+          receipt_file_url?: string | null
+          receipt_file_name?: string | null
           idempotency_key?: string | null
           voided_at?: string | null
           voided_by?: string | null
@@ -252,6 +268,8 @@ export interface Database {
           sent_at?: string
           recorded_by?: string
           email_reference?: string | null
+          receipt_file_url?: string | null
+          receipt_file_name?: string | null
           idempotency_key?: string | null
           voided_at?: string | null
           voided_by?: string | null
@@ -339,6 +357,10 @@ export interface Database {
           updated_at: string
           status: CaseDocumentStatusType
           is_overdue: boolean
+          file_url: string | null
+          file_name: string | null
+          file_size: number | null
+          file_type: string | null
         }
       }
       case_status: {

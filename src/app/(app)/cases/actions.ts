@@ -426,3 +426,169 @@ export async function setDocumentRequiredAction(
     }
   }
 }
+
+
+/**
+ * Uploads and attaches a PDF or image scan to a case checklist item.
+ */
+export async function uploadDocumentAttachmentAction(
+  formData: FormData
+): Promise<CaseActionState> {
+  try {
+    await assertAuth()
+
+    const caseDocumentId = formData.get('case_document_id') as string
+    const caseId = formData.get('case_id') as string
+    const markAsReceived = formData.get('mark_as_received') === 'true'
+    const file = formData.get('file') as File | null
+
+    if (!caseDocumentId || !caseId) {
+      return { success: false, error: 'Document and Case identifiers are required.' }
+    }
+
+    if (!file || file.size === 0) {
+      return { success: false, error: 'Please select a valid document or PDF file to upload.' }
+    }
+
+    const MAX_SIZE = 15 * 1024 * 1024 // 15MB
+    if (file.size > MAX_SIZE) {
+      return { success: false, error: 'File size exceeds maximum allowed limit of 15MB.' }
+    }
+
+    const ALLOWED_TYPES = [
+      'application/pdf',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+    ]
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return {
+        success: false,
+        error: 'Only PDF documents and images (PNG, JPG, WebP) can be uploaded.',
+      }
+    }
+
+    const supabase = await createClient()
+
+    // 1. Upload to Supabase Storage
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const filePath = `cases/${caseId}/${caseDocumentId}/${Date.now()}_${safeFileName}`
+
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('case-attachments')
+      .upload(filePath, buffer, {
+        contentType: file.type,
+        upsert: true,
+      })
+
+    let fileUrl: string
+    if (uploadError) {
+      return {
+        success: false,
+        error: `Storage upload failed: ${uploadError.message}. Ensure 'case-attachments' bucket is configured in Supabase.`,
+      }
+    } else {
+      const { data: urlData } = supabase.storage
+        .from('case-attachments')
+        .getPublicUrl(uploadData.path)
+      fileUrl = urlData.publicUrl
+    }
+
+    // 2. Call RPC attach_case_document_file or fallback update
+    const { error: rpcError } = await supabase.rpc('attach_case_document_file', {
+      p_case_document_id: caseDocumentId,
+      p_file_url: fileUrl,
+      p_file_name: file.name,
+      p_file_size: file.size,
+      p_file_type: file.type,
+    })
+
+    if (rpcError) {
+      // Fallback direct update if RPC is missing
+      const { error: updateError } = await supabase
+        .from('case_documents')
+        .update({
+          file_url: fileUrl,
+          file_name: file.name,
+          file_size: file.size,
+          file_type: file.type,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', caseDocumentId)
+
+      if (updateError) {
+        return { success: false, error: updateError.message || 'Failed to attach file to document.' }
+      }
+    }
+
+    // 3. Optional: Mark document as received if requested and not yet received
+    if (markAsReceived) {
+      await supabase.rpc('receive_document', {
+        p_case_document_id: caseDocumentId,
+      })
+    }
+
+    revalidatePath(`/cases/${caseId}`)
+    revalidatePath('/cases')
+    revalidatePath('/pending')
+
+    return {
+      success: true,
+      data: {
+        file_url: fileUrl,
+        file_name: file.name,
+        file_size: file.size,
+      },
+    }
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: getErrorMessage(err, 'An unexpected error occurred during document upload.'),
+    }
+  }
+}
+
+/**
+ * Removes the digital attachment from a case document.
+ */
+export async function removeDocumentAttachmentAction(
+  caseDocumentId: string,
+  caseId: string
+): Promise<CaseActionState> {
+  try {
+    await assertAuth()
+
+    const supabase = await createClient()
+    const { error: rpcError } = await supabase.rpc('remove_case_document_file', {
+      p_case_document_id: caseDocumentId,
+    })
+
+    if (rpcError) {
+      await supabase
+        .from('case_documents')
+        .update({
+          file_url: null,
+          file_name: null,
+          file_size: null,
+          file_type: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', caseDocumentId)
+    }
+
+    revalidatePath(`/cases/${caseId}`)
+    revalidatePath('/cases')
+    revalidatePath('/pending')
+
+    return { success: true }
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: getErrorMessage(err, 'Failed to remove attachment.'),
+    }
+  }
+}

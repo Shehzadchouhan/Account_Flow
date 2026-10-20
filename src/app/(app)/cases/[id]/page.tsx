@@ -97,7 +97,11 @@ export default async function CaseDetailPage(props: CaseDetailPageProps) {
       received_by,
       notes,
       created_at,
-      status
+      status,
+      file_url,
+      file_name,
+      file_size,
+      file_type
     `
     )
     .eq('case_id', caseId)
@@ -132,6 +136,8 @@ export default async function CaseDetailPage(props: CaseDetailPageProps) {
       sent_at,
       recorded_by,
       email_reference,
+      receipt_file_url,
+      receipt_file_name,
       idempotency_key,
       voided_at,
       voided_by,

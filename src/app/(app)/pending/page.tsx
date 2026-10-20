@@ -64,6 +64,8 @@ interface PendingDocumentRow {
   created_at: string
   status: CaseDocumentStatusType
   is_overdue: boolean
+  file_url?: string | null
+  file_name?: string | null
 }
 
 export default async function PendingWorkPage(props: PendingPageProps) {
@@ -130,7 +132,9 @@ export default async function PendingWorkPage(props: PendingPageProps) {
       notes,
       created_at,
       status,
-      is_overdue
+      is_overdue,
+      file_url,
+      file_name
     `,
       { count: 'exact' }
     )
@@ -541,8 +545,19 @@ export default async function PendingWorkPage(props: PendingPageProps) {
 
                       {/* Document */}
                       <td className="px-4 py-3.5 whitespace-nowrap">
-                        <div className="font-medium text-slate-900">
-                          {row.document_type_name}
+                        <div className="font-medium text-slate-900 flex items-center gap-1.5">
+                          <span>{row.document_type_name}</span>
+                          {row.file_url && (
+                            <a
+                              href={row.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-2xs font-semibold rounded bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
+                              title={row.file_name || 'View Scan'}
+                            >
+                              <span>📄 Scan</span>
+                            </a>
+                          )}
                         </div>
                         <div className="mt-0.5">
                           {row.is_required ? (

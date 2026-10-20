@@ -62,3 +62,11 @@ export const updateDocumentNotesSchema = z.object({
 })
 
 export type UpdateDocumentNotesInput = z.infer<typeof updateDocumentNotesSchema>
+
+export const uploadAttachmentSchema = z.object({
+  case_document_id: z.string().uuid({ message: 'Invalid document identifier' }),
+  case_id: z.string().uuid({ message: 'Invalid case identifier' }),
+  mark_as_received: z.boolean().default(false),
+})
+
+export type UploadAttachmentInput = z.infer<typeof uploadAttachmentSchema>

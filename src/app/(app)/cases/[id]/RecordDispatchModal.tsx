@@ -37,6 +37,7 @@ export function RecordDispatchModal({
   const [recipient, setRecipient] = useState('')
   const [sentAt, setSentAt] = useState(() => toInputDateTimeLocalIST(new Date()))
   const [emailReference, setEmailReference] = useState('')
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
   const [idempotencyKey] = useState(() => crypto.randomUUID())
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -85,6 +86,9 @@ export function RecordDispatchModal({
       formData.set('sent_at', sentAt ? new Date(sentAt).toISOString() : new Date().toISOString())
       if (emailReference.trim()) {
         formData.set('email_reference', emailReference.trim())
+      }
+      if (receiptFile) {
+        formData.set('receipt_file', receiptFile)
       }
       formData.set('idempotency_key', idempotencyKey)
       selectedDocIds.forEach((id) => formData.append('case_document_ids', id))
@@ -299,6 +303,22 @@ export function RecordDispatchModal({
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <p className="text-2xs text-slate-500 mt-1">Tracks reference numbers, email subjects, or tracking IDs</p>
+            </div>
+
+            {/* Postal / Courier Receipt Upload */}
+            <div>
+              <label htmlFor="dispatch-receipt-file" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Postal Receipt / Courier Challan Scan (Optional)
+              </label>
+              <input
+                id="dispatch-receipt-file"
+                type="file"
+                accept="application/pdf,image/*"
+                disabled={isSubmitting}
+                onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 file:mr-2.5 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+              />
+              <p className="text-2xs text-slate-500 mt-1">Upload photo or PDF scan of Speed Post receipt or courier challan</p>
             </div>
           </div>
 

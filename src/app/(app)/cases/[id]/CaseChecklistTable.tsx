@@ -12,6 +12,7 @@ import {
   addCaseDocumentAction,
 } from '../actions'
 import { RecordDispatchModal } from './RecordDispatchModal'
+import { DocumentAttachmentModal } from '@/components/DocumentAttachmentModal'
 import type { CaseDocumentStatusType } from '@/types/database.types'
 
 export interface CaseDocumentItem {
@@ -25,6 +26,10 @@ export interface CaseDocumentItem {
   notes: string | null
   status: CaseDocumentStatusType
   created_at: string
+  file_url?: string | null
+  file_name?: string | null
+  file_size?: number | null
+  file_type?: string | null
 }
 
 interface DocumentTypeOption {
@@ -69,6 +74,9 @@ export function CaseChecklistTable({
   // Dispatch Modal State
   const [isDispatchModalOpen, setIsDispatchModalOpen] = useState(false)
   const [dispatchInitialDocIds, setDispatchInitialDocIds] = useState<string[]>([])
+
+  // Attachment Modal State
+  const [attachmentModalDoc, setAttachmentModalDoc] = useState<CaseDocumentItem | null>(null)
 
   const [isPending, setIsPending] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -339,6 +347,9 @@ export function CaseChecklistTable({
                     Receipt Details
                   </th>
                   <th scope="col" className="px-4 py-3.5">
+                    Scan / PDF
+                  </th>
+                  <th scope="col" className="px-4 py-3.5">
                     Notes
                   </th>
                   <th scope="col" className="px-4 py-3.5 text-right">
@@ -398,6 +409,35 @@ export function CaseChecklistTable({
                           </div>
                         ) : (
                           <span className="text-slate-400 italic">Not received</span>
+                        )}
+                      </td>
+
+                      {/* Attachment / Scan */}
+                      <td className="px-4 py-4 whitespace-nowrap text-xs">
+                        {doc.file_url ? (
+                          <button
+                            type="button"
+                            onClick={() => setAttachmentModalDoc(doc)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors shadow-2xs"
+                            title={doc.file_name || 'View attached scan'}
+                          >
+                            <svg className="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span className="max-w-[110px] truncate">{doc.file_name || 'View Scan'}</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setAttachmentModalDoc(doc)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 hover:text-indigo-700 hover:bg-indigo-50/50 border border-dashed border-slate-300 hover:border-indigo-300 transition-colors"
+                            title="Upload PDF or scan via mobile camera"
+                          >
+                            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                            </svg>
+                            <span>+ Attach Scan</span>
+                          </button>
                         )}
                       </td>
 
@@ -713,6 +753,16 @@ export function CaseChecklistTable({
           availableDocuments={undispatchedReceivedDocs}
           initialSelectedDocIds={dispatchInitialDocIds}
           distinctRecipients={distinctRecipients}
+        />
+      )}
+
+      {/* Document Attachment & Scan Modal */}
+      {attachmentModalDoc && (
+        <DocumentAttachmentModal
+          isOpen={Boolean(attachmentModalDoc)}
+          onClose={() => setAttachmentModalDoc(null)}
+          caseId={caseId}
+          caseDocument={attachmentModalDoc}
         />
       )}
     </div>

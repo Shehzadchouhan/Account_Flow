@@ -73,6 +73,38 @@ export async function createDispatchAction(
     }
 
     const supabase = await createClient()
+
+    // Upload receipt file if provided
+    const receiptFile = formData.get('receipt_file') as File | null
+    let receiptFileUrl: string | null = null
+    let receiptFileName: string | null = null
+
+    if (receiptFile && receiptFile.size > 0) {
+      try {
+        const safeName = receiptFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+        const filePath = `dispatches/${parseResult.data.case_id}/${Date.now()}_${safeName}`
+        const arrayBuffer = await receiptFile.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from('case-attachments')
+          .upload(filePath, buffer, {
+            contentType: receiptFile.type,
+            upsert: true,
+          })
+
+        if (!uploadErr && uploadData) {
+          const { data: urlData } = supabase.storage
+            .from('case-attachments')
+            .getPublicUrl(uploadData.path)
+          receiptFileUrl = urlData.publicUrl
+          receiptFileName = receiptFile.name
+        }
+      } catch {
+        // Non-blocking: continue recording dispatch even if optional storage upload encounters network error
+      }
+    }
+
     const { data, error } = await supabase.rpc('create_dispatch', {
       p_case_id: parseResult.data.case_id,
       p_recipient: parseResult.data.recipient,
@@ -87,6 +119,17 @@ export async function createDispatchAction(
         success: false,
         error: error.message || 'Failed to record outward dispatch.',
       }
+    }
+
+    // Attach receipt file to created dispatch record
+    if (receiptFileUrl && data) {
+      await supabase
+        .from('dispatches')
+        .update({
+          receipt_file_url: receiptFileUrl,
+          receipt_file_name: receiptFileName,
+        })
+        .eq('id', data as string)
     }
 
     revalidatePath('/cases')
