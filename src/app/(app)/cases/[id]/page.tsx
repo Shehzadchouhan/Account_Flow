@@ -75,7 +75,14 @@ export default async function CaseDetailPage(props: CaseDetailPageProps) {
     notFound()
   }
 
-  // 2. Fetch documents from case_document_status view
+  // 2. Fetch firm contact info for reminder emails
+  const { data: firmRecord } = await supabase
+    .from('firms')
+    .select('contact_person, contact_email, contact_phone')
+    .eq('id', caseRecord.firm_id)
+    .single()
+
+  // 3. Fetch documents from case_document_status view
   const { data: documentsData } = await supabase
     .from('case_document_status')
     .select(
@@ -97,25 +104,25 @@ export default async function CaseDetailPage(props: CaseDetailPageProps) {
     .order('is_required', { ascending: false })
     .order('document_type_name', { ascending: true })
 
-  // 3. Fetch active team members for assignee dropdown
+  // 4. Fetch active team members for assignee dropdown
   const { data: staffMembers } = await supabase
     .from('profiles')
     .select('id, full_name')
     .eq('is_active', true)
     .order('full_name', { ascending: true })
 
-  // 4. Fetch active document types for adding documents to case
+  // 5. Fetch active document types for adding documents to case
   const { data: availableDocumentTypes } = await supabase
     .from('document_types')
     .select('id, name, description')
     .eq('is_active', true)
     .order('name', { ascending: true })
 
-  // 5. Fetch distinct recipient suggestions for outward dispatch autocomplete
+  // 6. Fetch distinct recipient suggestions for outward dispatch autocomplete
   const { data: recipientData } = await supabase.rpc('get_distinct_recipients')
   const distinctRecipients = (recipientData as string[]) || []
 
-  // 6. Fetch outward dispatches history for this case
+  // 7. Fetch outward dispatches history for this case
   const { data: dispatchesData } = await supabase
     .from('dispatches')
     .select(`
@@ -149,10 +156,19 @@ export default async function CaseDetailPage(props: CaseDetailPageProps) {
   const documents = (documentsData as unknown as CaseDocumentItem[]) || []
   const dispatches = (dispatchesData as unknown as CaseDispatchItem[]) || []
 
+  // Compute missing required document names
+  const missingDocuments = documents
+    .filter((doc) => doc.is_required && !doc.received_at)
+    .map((doc) => doc.document_type_name)
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Case Header */}
-      <CaseHeader caseData={caseHeaderData} />
+      <CaseHeader
+        caseData={caseHeaderData}
+        firmContact={firmRecord}
+        missingDocuments={missingDocuments}
+      />
 
       {/* Admin Case Settings Drawer (Due Date & Assignee) */}
       {isAdmin && (
@@ -182,6 +198,8 @@ export default async function CaseDetailPage(props: CaseDetailPageProps) {
         caseId={caseHeaderData.case_id}
         dispatches={dispatches}
         isAdmin={isAdmin}
+        firmName={caseHeaderData.firm_name}
+        firmContact={firmRecord}
       />
     </div>
   )

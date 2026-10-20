@@ -13,6 +13,10 @@ import {
 } from '../../src/lib/export-utils.ts'
 import { getFriendlyErrorMessage } from '../../src/lib/error-mapper.ts'
 import { formatActivityLog } from '../../src/lib/activity-utils.ts'
+import {
+  generateClientReminderDraft,
+  generateDispatchIntimationDraft,
+} from '../../src/lib/email-templates.ts'
 
 describe('1. Date & Time Helpers (Asia/Kolkata)', () => {
   it('formats dates accurately in IST timezone', () => {
@@ -145,5 +149,80 @@ describe('4. Activity Log Formatter & Entity Links', () => {
     assert.match(formatted.description, /Pending Documents/)
     assert.match(formatted.description, /35 rows/)
     assert.equal(formatted.entityLink?.href, '/reports')
+  })
+})
+
+describe('5. Auto Email & Client Communication Generator', () => {
+  it('generates pre-composed client reminder draft with encoded mailto and pending list', () => {
+    const draft = generateClientReminderDraft({
+      firmName: 'Shree Balaji Traders',
+      contactPerson: 'Ramesh Patel',
+      contactEmail: 'ramesh@balaji.com',
+      periodMonth: '2026-10-01',
+      cycle: 'A_11th',
+      dueDate: '2026-10-11',
+      missingDocuments: ['Bank Statements (HDFC Bank)', 'Sales Invoices / Vouchers'],
+      senderName: 'Shehzad Chouhan',
+      officeName: 'Apex Financial Services',
+    })
+
+    assert.equal(draft.recipient, 'ramesh@balaji.com')
+    assert.match(draft.subject, /Shree Balaji Traders/)
+    assert.match(draft.subject, /Oct 2026/)
+    assert.match(draft.subject, /Cycle A/)
+
+    // Body content verification
+    assert.match(draft.body, /Dear Ramesh Patel/)
+    assert.match(draft.body, /Apex Financial Services/)
+    assert.match(draft.body, /Bank Statements \(HDFC Bank\)/)
+    assert.match(draft.body, /Sales Invoices \/ Vouchers/)
+    assert.match(draft.body, /Shehzad Chouhan/)
+
+    // Mailto URL encoding
+    assert.match(draft.mailtoUrl, /^mailto:ramesh%40balaji\.com\?subject=/)
+    assert.match(draft.mailtoUrl, /Bank%20Statements/)
+
+    // WhatsApp formatting
+    assert.match(draft.whatsAppText, /\*Firm:\* Shree Balaji Traders/)
+    assert.match(draft.whatsAppText, /\*•\* Bank Statements/)
+  })
+
+  it('handles firms without contact email gracefully', () => {
+    const draft = generateClientReminderDraft({
+      firmName: 'Mahaveer Textiles',
+      contactPerson: null,
+      contactEmail: null,
+      periodMonth: '2026-10-01',
+      cycle: 'B_20th',
+      dueDate: '2026-10-20',
+      missingDocuments: [],
+    })
+
+    assert.equal(draft.recipient, '')
+    assert.match(draft.body, /Dear Mahaveer Textiles/)
+    assert.match(draft.mailtoUrl, /^mailto:\?subject=/)
+  })
+
+  it('generates outward dispatch intimation draft with courier and tracking details', () => {
+    const draft = generateDispatchIntimationDraft({
+      firmName: 'Gupta Enterprises',
+      contactPerson: 'Anil Gupta',
+      contactEmail: 'anil@guptaent.com',
+      recipient: 'Income Tax Assessing Officer Ward 3(1)',
+      courier: 'India Post Speed Post',
+      trackingNumber: 'EU123456789IN',
+      sentAt: '2026-10-15T14:30:00Z',
+      dispatchedDocuments: ['Section 143(1) Notice Reply', 'Audited Balance Sheet'],
+      senderName: 'Shehzad Chouhan',
+    })
+
+    assert.equal(draft.recipient, 'anil@guptaent.com')
+    assert.match(draft.subject, /Dispatch Advice/)
+    assert.match(draft.subject, /Gupta Enterprises/)
+    assert.match(draft.body, /India Post Speed Post/)
+    assert.match(draft.body, /EU123456789IN/)
+    assert.match(draft.body, /Income Tax Assessing Officer Ward 3\(1\)/)
+    assert.match(draft.body, /Section 143\(1\) Notice Reply/)
+    assert.match(draft.mailtoUrl, /EU123456789IN/)
   })
 })

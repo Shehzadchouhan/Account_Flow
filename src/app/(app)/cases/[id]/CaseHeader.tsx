@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { StatusBadge } from '@/components/StatusBadge'
+import { EmailReminderButton } from '@/components/EmailReminderButton'
 import type { CaseStatusType, CaseCycle } from '@/types/database.types'
 
 export interface CaseHeaderData {
@@ -24,11 +25,19 @@ export interface CaseHeaderData {
   } | null
 }
 
-interface CaseHeaderProps {
-  caseData: CaseHeaderData
+export interface FirmContactInfo {
+  contact_person: string | null
+  contact_email: string | null
+  contact_phone: string | null
 }
 
-export function CaseHeader({ caseData }: CaseHeaderProps) {
+interface CaseHeaderProps {
+  caseData: CaseHeaderData
+  firmContact?: FirmContactInfo | null
+  missingDocuments?: string[]
+}
+
+export function CaseHeader({ caseData, firmContact, missingDocuments = [] }: CaseHeaderProps) {
   const monthFormatted = new Date(`${caseData.period_month}T00:00:00Z`).toLocaleString('en-US', {
     month: 'long',
     year: 'numeric',
@@ -61,15 +70,36 @@ export function CaseHeader({ caseData }: CaseHeaderProps) {
           </div>
           <p className="mt-1 text-xs text-slate-500">
             {monthFormatted} • {cycleLabel} • Assigned to: <strong>{assigneeName}</strong>
+            {firmContact?.contact_email && (
+              <span className="ml-2 text-slate-400">
+                • {firmContact.contact_email}
+              </span>
+            )}
           </p>
         </div>
 
-        <div className="text-right sm:border-l sm:border-slate-200 sm:pl-6 shrink-0">
-          <span className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Target Due Date
-          </span>
-          <div className="text-xl font-bold text-slate-900 mt-0.5">{caseData.due_date}</div>
-          <span className="text-[11px] text-slate-400">Version #{caseData.version}</span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:border-l sm:border-slate-200 sm:pl-6 shrink-0">
+          <div className="text-left sm:text-right">
+            <span className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Target Due Date
+            </span>
+            <div className="text-xl font-bold text-slate-900 mt-0.5">{caseData.due_date}</div>
+            <span className="text-[11px] text-slate-400">Version #{caseData.version}</span>
+          </div>
+
+          <div className="shrink-0">
+            <EmailReminderButton
+              firmName={caseData.firm_name}
+              contactPerson={firmContact?.contact_person}
+              contactEmail={firmContact?.contact_email}
+              periodMonth={caseData.period_month}
+              cycle={caseData.cycle}
+              dueDate={caseData.due_date}
+              missingDocuments={missingDocuments}
+              senderName={assigneeName !== 'Unassigned' ? assigneeName : undefined}
+              buttonLabel={caseData.missing_count > 0 ? 'Email Reminder' : 'Email Client'}
+            />
+          </div>
         </div>
       </div>
 

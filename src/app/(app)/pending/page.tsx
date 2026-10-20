@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { requireAuth } from '@/utils/auth'
 import { StatusBadge } from '@/components/StatusBadge'
+import { EmailReminderButton } from '@/components/EmailReminderButton'
 import { formatDateIST, formatMonthYear } from '@/lib/date-utils'
 import type { CaseCycle, CaseDocumentStatusType } from '@/types/database.types'
 
@@ -86,7 +87,7 @@ export default async function PendingWorkPage(props: PendingPageProps) {
 
   // 1. Fetch metadata for filter dropdowns
   const [firmsRes, staffRes, docTypesRes] = await Promise.all([
-    supabase.from('firms').select('id, name').order('name', { ascending: true }),
+    supabase.from('firms').select('id, name, contact_person, contact_email, contact_phone').order('name', { ascending: true }),
     supabase.from('profiles').select('id, full_name').eq('is_active', true).order('full_name', { ascending: true }),
     supabase.from('document_types').select('id, name').order('name', { ascending: true }),
   ])
@@ -95,6 +96,15 @@ export default async function PendingWorkPage(props: PendingPageProps) {
   const staffList = staffRes.data || []
   const docTypesList = docTypesRes.data || []
   const monthOptions = getMonthOptions()
+
+  // Map firm contacts for 1-click reminders
+  const firmContactMap = new Map<string, { contact_person: string | null; contact_email: string | null }>()
+  for (const firm of firmsList) {
+    firmContactMap.set(firm.id, {
+      contact_person: firm.contact_person,
+      contact_email: firm.contact_email,
+    })
+  }
 
   // 2. Query case_document_status view
   // Scope: Active firms only and undispatched documents
@@ -595,15 +605,30 @@ export default async function PendingWorkPage(props: PendingPageProps) {
                         )}
                       </td>
 
-                      {/* Action Link to Case */}
+                      {/* Action Links */}
                       <td className="px-4 py-3.5 whitespace-nowrap text-right">
-                        <Link
-                          href={`/cases/${row.case_id}`}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 rounded-lg border border-blue-200 transition-colors"
-                        >
-                          <span>View Case</span>
-                          <span aria-hidden="true">&rarr;</span>
-                        </Link>
+                        <div className="flex items-center justify-end gap-2">
+                          {row.status === 'Awaiting Receipt' && (
+                            <EmailReminderButton
+                              variant="compact"
+                              firmName={row.firm_name}
+                              contactPerson={firmContactMap.get(row.firm_id)?.contact_person}
+                              contactEmail={firmContactMap.get(row.firm_id)?.contact_email}
+                              periodMonth={row.period_month}
+                              cycle={row.cycle}
+                              dueDate={row.due_date}
+                              missingDocuments={[row.document_type_name]}
+                              senderName={row.assigned_to_name}
+                            />
+                          )}
+                          <Link
+                            href={`/cases/${row.case_id}`}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 rounded-lg border border-blue-200 transition-colors"
+                          >
+                            <span>View Case</span>
+                            <span aria-hidden="true">&rarr;</span>
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   )
