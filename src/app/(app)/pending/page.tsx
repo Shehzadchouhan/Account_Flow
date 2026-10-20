@@ -132,9 +132,7 @@ export default async function PendingWorkPage(props: PendingPageProps) {
       notes,
       created_at,
       status,
-      is_overdue,
-      file_url,
-      file_name
+      is_overdue
     `,
       { count: 'exact' }
     )

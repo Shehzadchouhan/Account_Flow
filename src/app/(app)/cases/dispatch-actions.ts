@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
 import { assertAdmin, assertAuth } from '@/utils/auth'
 import { createDispatchSchema, voidDispatchSchema } from '@/lib/validations/dispatch'
 
@@ -86,7 +87,8 @@ export async function createDispatchAction(
         const arrayBuffer = await receiptFile.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
 
-        const { data: uploadData, error: uploadErr } = await supabase.storage
+        const storageClient = createAdminClient() || supabase
+        const { data: uploadData, error: uploadErr } = await storageClient.storage
           .from('case-attachments')
           .upload(filePath, buffer, {
             contentType: receiptFile.type,
@@ -94,7 +96,7 @@ export async function createDispatchAction(
           })
 
         if (!uploadErr && uploadData) {
-          const { data: urlData } = supabase.storage
+          const { data: urlData } = storageClient.storage
             .from('case-attachments')
             .getPublicUrl(uploadData.path)
           receiptFileUrl = urlData.publicUrl

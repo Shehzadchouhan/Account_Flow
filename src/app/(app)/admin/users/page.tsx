@@ -18,6 +18,8 @@ export default async function AdminUsersPage() {
     .select('id, full_name, email, role, is_active, created_at')
     .order('full_name', { ascending: true })
 
+  const hasServiceRoleKey = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Breadcrumb */}
@@ -38,7 +40,7 @@ export default async function AdminUsersPage() {
           Team Members &amp; Access Roles
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          Manage user profiles, activate registered staff accounts, and configure administrative privileges
+          Onboard staff accountants, manage access roles, and issue login credentials
         </p>
       </div>
 
@@ -50,6 +52,7 @@ export default async function AdminUsersPage() {
         <UserManager
           profiles={profiles || []}
           currentUserId={currentUser.id}
+          hasServiceRoleKey={hasServiceRoleKey}
         />
       )}
     </div>

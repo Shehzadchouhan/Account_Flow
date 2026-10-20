@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
 import { assertAdmin, assertAuth } from '@/utils/auth'
 import {
   generateCasesSchema,
@@ -470,6 +471,8 @@ export async function uploadDocumentAttachmentAction(
     }
 
     const supabase = await createClient()
+    const adminClient = createAdminClient()
+    const storageClient = adminClient || supabase
 
     // 1. Upload to Supabase Storage
     const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
@@ -478,12 +481,26 @@ export async function uploadDocumentAttachmentAction(
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    let { data: uploadData, error: uploadError } = await storageClient.storage
       .from('case-attachments')
       .upload(filePath, buffer, {
         contentType: file.type,
         upsert: true,
       })
+
+    if (uploadError && (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket'))) {
+      if (adminClient) {
+        await adminClient.storage.createBucket('case-attachments', { public: true })
+        const retry = await adminClient.storage
+          .from('case-attachments')
+          .upload(filePath, buffer, {
+            contentType: file.type,
+            upsert: true,
+          })
+        uploadData = retry.data
+        uploadError = retry.error
+      }
+    }
 
     let fileUrl: string
     if (uploadError) {
@@ -491,11 +508,13 @@ export async function uploadDocumentAttachmentAction(
         success: false,
         error: `Storage upload failed: ${uploadError.message}. Ensure 'case-attachments' bucket is configured in Supabase.`,
       }
-    } else {
-      const { data: urlData } = supabase.storage
+    } else if (uploadData) {
+      const { data: urlData } = storageClient.storage
         .from('case-attachments')
         .getPublicUrl(uploadData.path)
       fileUrl = urlData.publicUrl
+    } else {
+      return { success: false, error: 'Upload failed: No upload data returned from storage service.' }
     }
 
     // 2. Call RPC attach_case_document_file or fallback update
@@ -509,7 +528,7 @@ export async function uploadDocumentAttachmentAction(
 
     if (rpcError) {
       // Fallback direct update if RPC is missing
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (adminClient || supabase)
         .from('case_documents')
         .update({
           file_url: fileUrl,
@@ -521,6 +540,13 @@ export async function uploadDocumentAttachmentAction(
         .eq('id', caseDocumentId)
 
       if (updateError) {
+        if (updateError.message?.includes('file_url') || updateError.code === '42703') {
+          return {
+            success: false,
+            error:
+              'File uploaded to storage! To save attachment links in database, run Migration 11 in Supabase SQL Editor (https://supabase.com/dashboard/project/trkataonrlxtewdzpukw/sql/new).',
+          }
+        }
         return { success: false, error: updateError.message || 'Failed to attach file to document.' }
       }
     }
