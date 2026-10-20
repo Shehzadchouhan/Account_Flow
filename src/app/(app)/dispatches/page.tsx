@@ -3,10 +3,11 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { getCurrentUserRole } from '@/utils/auth'
 import { DispatchesTable, type GlobalDispatchItem } from './DispatchesTable'
+import { PageHelpBanner } from '@/components/PageHelpBanner'
 
 export const metadata: Metadata = {
-  title: 'Outward Dispatches | FinanceFlow',
-  description: 'Global audit history of outward compliance transmissions and dispatch records',
+  title: 'Dispatches (Outward Delivery Register) | FinanceFlow',
+  description: 'Global audit register of all completed files, tax proofs, and documents delivered to clients or CAs',
 }
 
 interface DispatchesPageProps {
@@ -179,25 +180,47 @@ export default async function DispatchesPage(props: DispatchesPageProps) {
             <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
-            <span>Outward Dispatches</span>
+            <span>Dispatches (Outward Delivery Register)</span>
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Global register and audit trail of all outward dispatches transmitted to CAs, auditors, and departments.
+            Global log and proof of delivery for completed files, tax proofs, and documents delivered to clients or CAs.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <Link
             href="/cases"
-            className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 rounded-lg text-sm font-semibold transition-colors min-h-[40px]"
+            className="inline-flex items-center gap-1.5 px-4 py-2 border border-blue-600 text-white bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-colors min-h-[40px] shadow-xs"
           >
-            <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
-            <span>Cases Directory</span>
+            <span>Record New Dispatch in Cases &rarr;</span>
           </Link>
         </div>
       </div>
+
+      {/* Beginner-friendly page guide */}
+      <PageHelpBanner
+        id="dispatches-register"
+        title="Dispatches Guide: How outward deliveries work"
+        description="Every delivery or handover of completed accounts, signed forms, or tax receipts to a client or auditor is logged here as a Dispatch."
+        steps={[
+          {
+            label: 'Where to record a dispatch?',
+            detail: 'Open the client\'s monthly folder under Cases. When documents are received, click "Record Dispatch" at the top of their checklist.',
+          },
+          {
+            label: 'Delivery Proof',
+            detail: 'Every entry records the recipient, date/time, staff member, courier/email reference, and optional receipt scans.',
+          },
+          {
+            label: 'Voiding Mistakes',
+            detail: 'If a dispatch was recorded by accident, administrators can void the record with a reason without losing audit history.',
+          },
+        ]}
+        tip="Looking to record a delivery right now? Click 'Record New Dispatch in Cases' above, select the client's case, and click 'Record Dispatch'."
+      />
 
       {/* Filter Bar */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs space-y-4">

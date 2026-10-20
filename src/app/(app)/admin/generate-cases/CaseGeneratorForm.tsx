@@ -184,7 +184,7 @@ export function CaseGeneratorForm() {
           {/* Action Row */}
           <div className="md:col-span-3 flex items-center justify-between pt-4 border-t border-slate-100">
             <span className="text-xs text-slate-500">
-              Step 1 of 2: Generate Dry Run Preview to inspect firms before writing cases
+              Step 1 of 2: Safe preview &mdash; see exactly which client folders will be created before saving
             </span>
             <button
               type="submit"
@@ -197,10 +197,10 @@ export function CaseGeneratorForm() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Simulating Preview...
+                  Checking Client List...
                 </>
               ) : (
-                'Preview Generation (Dry Run)'
+                'Preview Without Saving'
               )}
             </button>
           </div>
@@ -214,7 +214,7 @@ export function CaseGeneratorForm() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-blue-600 animate-pulse" />
-                <h3 className="text-lg font-bold text-slate-900">2. Dry Run Preview Results</h3>
+                <h3 className="text-lg font-bold text-slate-900">2. Preview Results (Nothing saved yet)</h3>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
                 Target Period: <strong>{previewResult.period_month}</strong> • Cycle: <strong>{previewResult.cycle}</strong> • Due: <strong>{previewResult.due_date}</strong>
@@ -241,37 +241,37 @@ export function CaseGeneratorForm() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
               <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-                Eligible to Create
+                Ready to Create
               </span>
               <div className="text-2xl font-bold text-emerald-950 mt-1">
                 {previewResult.created_count}
               </div>
               <p className="text-[11px] text-emerald-700 mt-1">
-                Active firms with checklist templates and no existing case
+                Active firms with checklist templates ready for new monthly cases
               </p>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-100 border border-slate-200">
               <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Skipped (Already Exists)
+                Already Created (Skipped)
               </span>
               <div className="text-2xl font-bold text-slate-900 mt-1">
                 {previewResult.skipped_existing_count}
               </div>
               <p className="text-[11px] text-slate-600 mt-1">
-                Idempotent: cases already recorded for this period &amp; cycle
+                Safe: Cases already exist for these clients — will not be duplicated
               </p>
             </div>
 
             <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
               <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">
-                Skipped (No Template)
+                Skipped (No Checklist Setup)
               </span>
               <div className="text-2xl font-bold text-amber-950 mt-1">
                 {previewResult.skipped_no_template_count}
               </div>
               <p className="text-[11px] text-amber-700 mt-1">
-                Firms with zero configured document checklist items
+                Firms with zero documents configured in their template
               </p>
             </div>
           </div>

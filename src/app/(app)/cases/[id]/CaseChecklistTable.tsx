@@ -266,7 +266,7 @@ export function CaseChecklistTable({
           <div>
             <h2 className="text-lg font-bold text-slate-900">Document Checklist</h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Live checklist computed via <code className="font-mono text-blue-700">case_document_status</code>
+              Check off documents as they arrive, attach PDF scans, and record dispatches when ready
             </p>
           </div>
 

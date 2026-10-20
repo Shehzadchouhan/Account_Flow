@@ -4,12 +4,13 @@ import { createClient } from '@/utils/supabase/server'
 import { requireAuth } from '@/utils/auth'
 import { StatusBadge } from '@/components/StatusBadge'
 import { EmailReminderButton } from '@/components/EmailReminderButton'
+import { PageHelpBanner } from '@/components/PageHelpBanner'
 import { formatDateIST, formatMonthYear } from '@/lib/date-utils'
 import type { CaseCycle, CaseDocumentStatusType } from '@/types/database.types'
 
 export const metadata: Metadata = {
-  title: 'Pending Work Queue | FinanceFlow',
-  description: 'Document-level pending work queue: documents awaiting receipt from firms and received documents pending dispatch',
+  title: 'Pending Work & Reminders | FinanceFlow',
+  description: 'Track missing client documents, send reminder emails, and manage documents ready for delivery',
 }
 
 interface PendingPageProps {
@@ -211,14 +212,14 @@ export default async function PendingWorkPage(props: PendingPageProps) {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Pending Work Queue
+              Pending Work &amp; Reminders
             </h1>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
-              {totalCount || 0} Pending Documents
+              {totalCount || 0} Action Items
             </span>
           </div>
           <p className="mt-1 text-sm text-slate-600">
-            Granular document-level operational backlog: records awaiting client receipt and received records pending outward dispatch
+            Daily action center: documents waiting to be collected from clients, and completed documents ready to deliver.
           </p>
         </div>
 
@@ -243,6 +244,28 @@ export default async function PendingWorkPage(props: PendingPageProps) {
           </Link>
         </div>
       </div>
+
+      {/* Beginner-friendly page guide */}
+      <PageHelpBanner
+        id="pending-work"
+        title="Pending Work Guide: How to use this screen"
+        description="Every document shown here requires action. Use this page daily to follow up with clients or prepare completed files for handover."
+        steps={[
+          {
+            label: 'Missing from Client?',
+            detail: 'Items marked "Awaiting Receipt" are missing. Click "Email Reminder" to send a pre-filled nudge email with 1 click.',
+          },
+          {
+            label: 'Ready to Deliver?',
+            detail: 'Items marked "Received - Not Dispatched" are in the office. Click into the Case folder to log their dispatch/delivery.',
+          },
+          {
+            label: 'Filter by Staff or Client',
+            detail: 'Use "Filter to My Work" above to see only documents assigned to you, or pick a specific client below.',
+          },
+        ]}
+        tip="Never type reminder emails manually — the 'Email Reminder' button automatically generates a professional email listing all missing documents!"
+      />
 
       {/* Filter Toolbar */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs space-y-4">
@@ -272,7 +295,7 @@ export default async function PendingWorkPage(props: PendingPageProps) {
           {/* Month Filter */}
           <div className="md:col-span-2">
             <label htmlFor="month" className="block text-xs font-medium text-slate-700 mb-1">
-              Compliance Month
+              Work Month
             </label>
             <select
               id="month"
@@ -292,7 +315,7 @@ export default async function PendingWorkPage(props: PendingPageProps) {
           {/* Cycle Filter */}
           <div className="md:col-span-2">
             <label htmlFor="cycle" className="block text-xs font-medium text-slate-700 mb-1">
-              Cycle
+              Filing Cycle
             </label>
             <select
               id="cycle"
@@ -301,8 +324,8 @@ export default async function PendingWorkPage(props: PendingPageProps) {
               className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[40px]"
             >
               <option value="all">All Cycles</option>
-              <option value="A_11th">Cycle A (11th)</option>
-              <option value="B_20th">Cycle B (20th)</option>
+              <option value="A_11th">Cycle A (Due 11th - Sales/GSTR-1)</option>
+              <option value="B_20th">Cycle B (Due 20th - Return/GSTR-3B)</option>
             </select>
           </div>
 
@@ -329,7 +352,7 @@ export default async function PendingWorkPage(props: PendingPageProps) {
           {/* Pending Status Filter */}
           <div className="md:col-span-2">
             <label htmlFor="status" className="block text-xs font-medium text-slate-700 mb-1">
-              Document Status
+              Action Status
             </label>
             <select
               id="status"
@@ -337,9 +360,9 @@ export default async function PendingWorkPage(props: PendingPageProps) {
               defaultValue={statusFilter}
               className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[40px]"
             >
-              <option value="all">All Pending</option>
-              <option value="awaiting_receipt">Awaiting Receipt</option>
-              <option value="received_not_dispatched">Received - Not Dispatched</option>
+              <option value="all">All Action Items</option>
+              <option value="awaiting_receipt">Awaiting Receipt (Missing from Client)</option>
+              <option value="received_not_dispatched">Received (Ready to Deliver)</option>
             </select>
           </div>
 

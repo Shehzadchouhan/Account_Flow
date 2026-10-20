@@ -3,12 +3,13 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { getCurrentUserRole } from '@/utils/auth'
 import { StatusBadge } from '@/components/StatusBadge'
+import { PageHelpBanner } from '@/components/PageHelpBanner'
 import { getTodayIST } from '@/lib/date-utils'
 import type { CaseStatusType, CaseCycle } from '@/types/database.types'
 
 export const metadata: Metadata = {
-  title: 'Compliance Cases | FinanceFlow',
-  description: 'Manage monthly compliance cases, document checklists, and dispatch cycles',
+  title: 'Cases (Client Monthly Folders) | FinanceFlow',
+  description: 'Manage monthly compliance and accounting cases, document checklists, and outward dispatches',
 }
 
 interface CasesPageProps {
@@ -210,14 +211,14 @@ export default async function CasesPage(props: CasesPageProps) {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Compliance Cases
+              Cases (Monthly Client Folders)
             </h1>
             <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200">
               {totalFilteredCount || 0} Total
             </span>
           </div>
           <p className="mt-1 text-sm text-slate-600">
-            Monthly dockets, document checklist receipts, and outward CA dispatch tracking
+            Monthly job folders for each client firm. Track received documents, missing papers, and completed deliveries.
           </p>
         </div>
 
@@ -233,6 +234,28 @@ export default async function CasesPage(props: CasesPageProps) {
           </Link>
         )}
       </div>
+
+      {/* Beginner-friendly page guide */}
+      <PageHelpBanner
+        id="cases-directory"
+        title="Cases Directory Guide: What is a Case?"
+        description="A 'Case' is a client's work folder for a specific month (e.g., Sharma Traders — April 2026). Click on any client firm name below to open their folder and manage their checklist."
+        steps={[
+          {
+            label: 'Open a Folder',
+            detail: 'Click any client name to see their required documents, upload files, or send reminder emails.',
+          },
+          {
+            label: 'Understand Cycles',
+            detail: 'Cycle A (due 11th) is for sales/GSTR-1. Cycle B (due 20th) is for monthly returns/GSTR-3B.',
+          },
+          {
+            label: 'Complete & Deliver',
+            detail: 'When all required documents are received, open the case and click "Record Dispatch" to deliver work to the client.',
+          },
+        ]}
+        tip="Filter by Status = 'Awaiting Documents' to quickly see which clients still owe you papers this month."
+      />
 
       {/* Filter Bar */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs space-y-4">
@@ -260,7 +283,7 @@ export default async function CasesPage(props: CasesPageProps) {
           {/* Month Selector (Default current in Asia/Kolkata) */}
           <div className="md:col-span-2">
             <label htmlFor="month" className="block text-xs font-medium text-slate-700 mb-1">
-              Month (Asia/Kolkata)
+              Work Month
             </label>
             <select
               id="month"
@@ -280,7 +303,7 @@ export default async function CasesPage(props: CasesPageProps) {
           {/* Cycle */}
           <div className="md:col-span-2">
             <label htmlFor="cycle" className="block text-xs font-medium text-slate-700 mb-1">
-              Cycle
+              Filing Cycle
             </label>
             <select
               id="cycle"
@@ -289,15 +312,15 @@ export default async function CasesPage(props: CasesPageProps) {
               className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[40px]"
             >
               <option value="all">All Cycles</option>
-              <option value="A_11th">Cycle A (11th)</option>
-              <option value="B_20th">Cycle B (20th)</option>
+              <option value="A_11th">Cycle A (Due 11th)</option>
+              <option value="B_20th">Cycle B (Due 20th)</option>
             </select>
           </div>
 
           {/* Status */}
           <div className="md:col-span-2">
             <label htmlFor="status" className="block text-xs font-medium text-slate-700 mb-1">
-              Calculated Status
+              Case Status
             </label>
             <select
               id="status"

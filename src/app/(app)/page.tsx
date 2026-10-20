@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/utils/supabase/server'
 import { getCurrentUserRole } from '@/utils/auth'
+import { PageHelpBanner } from '@/components/PageHelpBanner'
 import {
   getCurrentMonthIST,
   getTodayIST,
@@ -302,15 +303,37 @@ export default async function DashboardPage(props: DashboardPageProps) {
         </div>
       </div>
 
+      {/* Beginner-friendly collapsible guide */}
+      <PageHelpBanner
+        id="dashboard"
+        title="Dashboard Overview: How to understand this screen"
+        description="This dashboard provides a live operational overview of your firm's accounting work, client folders, and pending documents for the selected month."
+        steps={[
+          {
+            label: 'High Priority Alerts',
+            detail: 'Clients with overdue work or filings due today appear in red/amber for immediate action.',
+          },
+          {
+            label: 'Monthly Progress',
+            detail: 'Track cases awaiting client documents vs. cases ready to be completed and delivered.',
+          },
+          {
+            label: 'Action Items',
+            detail: 'See missing documents from clients or send 1-click email reminders directly.',
+          },
+        ]}
+        tip="Click any card or number below to open the filtered list of cases or documents immediately."
+      />
+
       {/* ========================================================= */}
-      {/* SECTION 1: Firm-Level & Urgency Metric Cards */}
+      {/* SECTION 1: High Priority Follow-ups */}
       {/* ========================================================= */}
       <div>
         <div className="flex items-center justify-between mb-3 px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            1. Firm Overview &amp; Urgency Monitors
+            1. High Priority Follow-ups
           </h2>
-          <span className="text-xs text-slate-500">Click any card to inspect pre-filtered list</span>
+          <span className="text-xs text-slate-500">Click any card to view the list</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -320,17 +343,17 @@ export default async function DashboardPage(props: DashboardPageProps) {
             className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all relative overflow-hidden"
           >
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Active Firms</span>
+              <span>Client Firms</span>
               <span className="text-slate-400 group-hover:text-blue-600 transition-colors">&rarr;</span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
               <span className="text-3xl font-extrabold text-slate-900">
                 {activeFirmsCount ?? 0}
               </span>
-              <span className="text-xs font-medium text-slate-500">distinct clients</span>
+              <span className="text-xs font-medium text-slate-500">active businesses</span>
             </div>
             <p className="mt-2 text-xs text-slate-500">
-              All registered client entities excluding archived firms
+              Total active client businesses managed in the system
             </p>
           </Link>
 
@@ -344,7 +367,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
             }`}
           >
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Firms Needing Attention</span>
+              <span>Clients Needing Attention</span>
               <span className="text-slate-400 group-hover:text-amber-600 transition-colors">&rarr;</span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
@@ -361,12 +384,12 @@ export default async function DashboardPage(props: DashboardPageProps) {
                 </span>
               ) : (
                 <span className="text-2xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  HEALTHY
+                  ALL ON TRACK
                 </span>
               )}
             </div>
             <p className="mt-2 text-xs text-slate-500">
-              Active firms with &ge;1 overdue or due-today non-completed case
+              Clients with overdue work or documents due today
             </p>
           </Link>
 
@@ -380,7 +403,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
             }`}
           >
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Overdue Cases</span>
+              <span>Overdue Work</span>
               <span className="text-slate-400 group-hover:text-red-600 transition-colors">&rarr;</span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
@@ -393,7 +416,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
               </span>
               {casesOverdueCount > 0 ? (
                 <span className="text-2xs font-bold px-2 py-0.5 rounded bg-red-100 text-red-800 border border-red-300 animate-pulse">
-                  PAST DUE
+                  PAST DUE DATE
                 </span>
               ) : (
                 <span className="text-2xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -402,7 +425,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
               )}
             </div>
             <p className="mt-2 text-xs text-slate-500">
-              Statutory cycle deadline elapsed in Asia/Kolkata
+              Cases where filing target date has passed — follow up needed
             </p>
           </Link>
 
@@ -427,22 +450,22 @@ export default async function DashboardPage(props: DashboardPageProps) {
               >
                 {casesDueTodayCount}
               </span>
-              <span className="text-xs text-slate-500">cases</span>
+              <span className="text-xs text-slate-500">client cases</span>
             </div>
             <p className="mt-2 text-xs text-slate-500">
-              Due on {formatDateIST(todayIST)} and not yet completed
+              Due on {formatDateIST(todayIST)} and not yet finished
             </p>
           </Link>
         </div>
       </div>
 
       {/* ========================================================= */}
-      {/* SECTION 2: Case Compliance Pipeline (Month View) */}
+      {/* SECTION 2: Monthly Work Progress */}
       {/* ========================================================= */}
       <div>
         <div className="flex items-center justify-between mb-3 px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            2. Case Compliance Status ({formatMonthYear(selectedMonth)} &bull; Active Firms)
+            2. Monthly Work Progress ({formatMonthYear(selectedMonth)})
           </h2>
           <span className="text-xs font-medium text-slate-500">
             Total active cases: {monthCases.length}
@@ -456,7 +479,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
             className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-amber-400 shadow-2xs hover:shadow-xs transition-all"
           >
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Awaiting Documents</span>
+              <span>Waiting For Client Docs</span>
               <span className="text-slate-400 group-hover:text-amber-600 transition-colors">&rarr;</span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
@@ -466,7 +489,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
               <span className="text-xs text-slate-500">cases</span>
             </div>
             <p className="mt-2 text-xs text-slate-500">
-              Missing one or more required client checklist items
+              Client has not yet sent one or more required papers
             </p>
           </Link>
 
@@ -476,7 +499,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
             className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all"
           >
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Pending Dispatch</span>
+              <span>Ready For Delivery</span>
               <span className="text-slate-400 group-hover:text-blue-600 transition-colors">&rarr;</span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
@@ -486,7 +509,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
               <span className="text-xs text-slate-500">cases</span>
             </div>
             <p className="mt-2 text-xs text-slate-500">
-              All required docs in-office; ready for CA outward docket
+              All documents in-office; work done and ready to deliver to client
             </p>
           </Link>
 
@@ -496,7 +519,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
             className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-emerald-400 shadow-2xs hover:shadow-xs transition-all"
           >
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Completed</span>
+              <span>Completed Work</span>
               <span className="text-slate-400 group-hover:text-emerald-600 transition-colors">&rarr;</span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
@@ -506,7 +529,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
               <span className="text-xs text-slate-500">cases</span>
             </div>
             <p className="mt-2 text-xs text-slate-500">
-              All required checklist documents received and dispatched
+              All documents received, filed, and delivered back to client
             </p>
           </Link>
 
@@ -516,7 +539,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
             className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-slate-400 shadow-2xs hover:shadow-xs transition-all"
           >
             <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Needs Setup</span>
+              <span>Needs Checklist Setup</span>
               <span className="text-slate-400 group-hover:text-slate-600 transition-colors">&rarr;</span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
@@ -526,25 +549,25 @@ export default async function DashboardPage(props: DashboardPageProps) {
               <span className="text-xs text-slate-500">cases</span>
             </div>
             <p className="mt-2 text-xs text-slate-500">
-              0 required documents configured; setup checklist
+              No documents configured; add checklist in client settings
             </p>
           </Link>
         </div>
       </div>
 
       {/* ========================================================= */}
-      {/* SECTION 3: Document Operational Queue (Undispatched) */}
+      {/* SECTION 3: Document Action Queue */}
       {/* ========================================================= */}
       <div>
         <div className="flex items-center justify-between mb-3 px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            3. Document Operational Queue ({formatMonthYear(selectedMonth)})
+            3. Document Action Queue ({formatMonthYear(selectedMonth)})
           </h2>
           <Link
             href={`/pending?month=${selectedMonth}`}
             className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
           >
-            View Full Pending Backlog &rarr;
+            View Full Pending List &rarr;
           </Link>
         </div>
 
@@ -556,7 +579,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
           >
             <div>
               <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Received &mdash; Not Dispatched
+                In-Office &mdash; Ready To Deliver
               </div>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-3xl font-extrabold text-amber-700">
@@ -565,7 +588,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
                 <span className="text-xs text-slate-500">documents</span>
               </div>
               <p className="mt-1 text-xs text-slate-500">
-                Received in office; awaiting bundle creation in outward dispatch
+                Documents collected in office; ready to be handed over or couriered to client
               </p>
             </div>
             <div className="h-10 w-10 rounded-full bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -582,7 +605,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
           >
             <div>
               <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Awaiting Receipt From Clients
+                Waiting For Client To Send
               </div>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-3xl font-extrabold text-blue-700">
@@ -591,7 +614,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
                 <span className="text-xs text-slate-500">documents</span>
               </div>
               <p className="mt-1 text-xs text-slate-500">
-                Checklist items pending collection or submission from client firms
+                Checklist items pending from clients (click to view &amp; send 1-click email reminder)
               </p>
             </div>
             <div className="h-10 w-10 rounded-full bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -610,10 +633,10 @@ export default async function DashboardPage(props: DashboardPageProps) {
         <div className="px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <h2 className="text-base font-bold text-slate-900">
-              Workload by Employee &bull; {formatMonthYear(selectedMonth)}
+              Team Workload &bull; {formatMonthYear(selectedMonth)}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Assigned case distributions, active bottlenecks, and overdue dockets across accounts staff
+              Assigned client cases, pending documents, and active deadlines per team member
             </p>
           </div>
           <div className="text-xs text-slate-500 font-medium">

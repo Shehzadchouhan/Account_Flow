@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import type { ReportType, ReportDataset, ReportFilterParams } from '@/lib/reports-data'
 import { StatusBadge, type BadgeStatus } from '@/components/StatusBadge'
+import { PageHelpBanner } from '@/components/PageHelpBanner'
 
 interface ReportTab {
   id: ReportType
@@ -16,7 +17,7 @@ const REPORT_TABS: ReportTab[] = [
   {
     id: 'pending_documents',
     label: 'Pending Documents',
-    description: 'Backlog of documents awaiting receipt from clients or pending outward dispatch',
+    description: 'Missing papers from clients or documents waiting to be delivered',
     icon: ({ className = 'w-4 h-4' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -26,7 +27,7 @@ const REPORT_TABS: ReportTab[] = [
   {
     id: 'completed_cases',
     label: 'Completed Cases',
-    description: 'Fully compliance-cleared cases with all required documents received and dispatched',
+    description: 'Finished client folders where all work is complete and delivered',
     icon: ({ className = 'w-4 h-4' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -36,7 +37,7 @@ const REPORT_TABS: ReportTab[] = [
   {
     id: 'dispatch_history',
     label: 'Dispatch History',
-    description: 'Outbound dispatch log with recipient CA/reviewers, postal references, and audit states',
+    description: 'Audit log of completed files, tax proofs, and client handovers',
     icon: ({ className = 'w-4 h-4' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -46,7 +47,7 @@ const REPORT_TABS: ReportTab[] = [
   {
     id: 'work_by_employee',
     label: 'Work by Employee',
-    description: 'Workload distribution, case assignments, pendencies, and completion velocity by staff',
+    description: 'Cases assigned, pending tasks, and completion counts per staff member',
     icon: ({ className = 'w-4 h-4' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -55,8 +56,8 @@ const REPORT_TABS: ReportTab[] = [
   },
   {
     id: 'received_not_dispatched',
-    label: 'Received Not Dispatched',
-    description: 'Operational bottleneck: documents physically or digitally received but awaiting dispatch',
+    label: 'Received In-Office',
+    description: 'Documents received from clients, waiting to be processed and dispatched',
     icon: ({ className = 'w-4 h-4' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
@@ -65,8 +66,8 @@ const REPORT_TABS: ReportTab[] = [
   },
   {
     id: 'overdue_cases',
-    label: 'Overdue Cases',
-    description: 'Statutory compliance breaches: active cases where due date has passed without full clearance',
+    label: 'Overdue Work',
+    description: 'Client cases where the filing deadline has passed without completion',
     icon: ({ className = 'w-4 h-4' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -145,10 +146,10 @@ export function ReportsViewer({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Reports &amp; Export Center
+            Reports &amp; Excel Exports
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Authoritative compliance registers and analytical reports derived directly from live database views
+            Generate, review, and download ready-to-use summaries of pending documents, completed work, and team workload
           </p>
         </div>
 
@@ -157,9 +158,31 @@ export function ReportsViewer({
           <svg className="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
-          <span>Formula injection neutralized &bull; Activity logged</span>
+          <span>Verified Office Data &bull; Audit Trail Logged</span>
         </div>
       </div>
+
+      {/* Beginner-friendly page guide */}
+      <PageHelpBanner
+        id="reports-center"
+        title="Reports Center Guide: Which report do I need?"
+        description="Choose a report tab below to inspect live data, filter by client or month, and download formatted Excel or CSV files."
+        steps={[
+          {
+            label: 'Pending Documents',
+            detail: 'Best for seeing which clients have not sent their papers or which files are waiting for delivery.',
+          },
+          {
+            label: 'Completed Cases',
+            detail: 'Best for billing and monthly review: all client folders where 100% of documents are finished.',
+          },
+          {
+            label: 'Work by Employee',
+            detail: 'Best for managers: see how many cases and pending documents each team member is currently handling.',
+          },
+        ]}
+        tip="Click 'Export to Excel (.xlsx)' at the top right of any report table to download a pre-styled spreadsheet."
+      />
 
       {/* Report Selection Tabs */}
       <div className="bg-white rounded-xl border border-slate-200 p-1.5 shadow-2xs">

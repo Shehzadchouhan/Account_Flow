@@ -6,9 +6,11 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { logout } from '@/app/auth/actions'
 import { GlobalSearch } from '@/components/GlobalSearch'
+import { HowItWorksModal } from '@/components/HowItWorksModal'
 
 interface NavItem {
   name: string
+  subtitle: string
   href: string
   icon: (props: { className?: string }) => React.ReactElement
 }
@@ -16,6 +18,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   {
     name: 'Dashboard',
+    subtitle: 'Overview & Alerts',
     href: '/',
     icon: ({ className = 'w-5 h-5' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -25,6 +28,7 @@ const navItems: NavItem[] = [
   },
   {
     name: 'Pending Work',
+    subtitle: 'Action Items & Reminders',
     href: '/pending',
     icon: ({ className = 'w-5 h-5' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -34,6 +38,7 @@ const navItems: NavItem[] = [
   },
   {
     name: 'Cases',
+    subtitle: 'Monthly Client Folders',
     href: '/cases',
     icon: ({ className = 'w-5 h-5' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -43,6 +48,7 @@ const navItems: NavItem[] = [
   },
   {
     name: 'Dispatches',
+    subtitle: 'Delivery Register',
     href: '/dispatches',
     icon: ({ className = 'w-5 h-5' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -52,6 +58,7 @@ const navItems: NavItem[] = [
   },
   {
     name: 'Firms',
+    subtitle: 'Client Directory',
     href: '/firms',
     icon: ({ className = 'w-5 h-5' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -61,6 +68,7 @@ const navItems: NavItem[] = [
   },
   {
     name: 'Reports',
+    subtitle: 'Summaries & Exports',
     href: '/reports',
     icon: ({ className = 'w-5 h-5' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -70,6 +78,7 @@ const navItems: NavItem[] = [
   },
   {
     name: 'Admin',
+    subtitle: 'System & Case Setup',
     href: '/admin',
     icon: ({ className = 'w-5 h-5' }) => (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -88,6 +97,7 @@ interface AppLayoutNavProps {
 
 export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isGuideOpen, setIsGuideOpen] = useState(false)
   const pathname = usePathname()
 
   const isActive = (href: string) => {
@@ -99,6 +109,9 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row text-slate-900">
+      {/* Interactive Workflow Guide Modal */}
+      <HowItWorksModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
+
       {/* ========================================================= */}
       {/* Mobile Top Header */}
       {/* ========================================================= */}
@@ -125,24 +138,34 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
             </div>
           </Link>
 
-          {/* Accessible Mobile Menu Toggle button: >= 44x44px tap target */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-expanded={mobileMenuOpen}
-            aria-label="Toggle navigation menu"
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg p-2 text-slate-300 hover:bg-slate-800 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-          >
-            {mobileMenuOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsGuideOpen(true)}
+              className="px-2.5 py-1.5 rounded-lg bg-blue-600/30 text-blue-200 border border-blue-500/40 text-xs font-bold hover:bg-blue-600/50"
+            >
+              📖 Guide
+            </button>
+
+            {/* Accessible Mobile Menu Toggle button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-expanded={mobileMenuOpen}
+              aria-label="Toggle navigation menu"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg p-2 text-slate-300 hover:bg-slate-800 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Collapsible Mobile Navigation Dropdown */}
@@ -158,14 +181,19 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
                     aria-current={active ? 'page' : undefined}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium min-h-[48px] transition-colors ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       active
                         ? 'bg-blue-600 text-white'
                         : 'text-slate-200 hover:bg-slate-800 hover:text-white'
                     }`}
                   >
                     <Icon className="w-5 h-5 shrink-0" />
-                    <span>{item.name}</span>
+                    <div>
+                      <span className="block font-semibold leading-tight">{item.name}</span>
+                      <span className={`block text-2xs leading-none mt-0.5 ${active ? 'text-blue-100' : 'text-slate-400'}`}>
+                        {item.subtitle}
+                      </span>
+                    </div>
                   </Link>
                 )
               })}
@@ -231,8 +259,25 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
           </div>
         </Link>
 
+        {/* Quick Guide Pill Button */}
+        <div className="px-3 pt-3">
+          <button
+            type="button"
+            onClick={() => setIsGuideOpen(true)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-blue-950/80 text-blue-200 border border-blue-800/60 hover:bg-blue-900 hover:text-white transition-colors text-xs font-semibold group shadow-2xs"
+          >
+            <span className="h-5 w-5 rounded-md bg-blue-600 text-white flex items-center justify-center text-xs group-hover:scale-105 transition-transform">
+              📖
+            </span>
+            <span className="flex-1 text-left font-medium">How FinanceFlow Works</span>
+            <span className="text-2xs bg-blue-800/80 px-1.5 py-0.5 rounded text-blue-200 font-bold">
+              Guide
+            </span>
+          </button>
+        </div>
+
         {/* Navigation Items */}
-        <nav aria-label="Main Navigation" className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+        <nav aria-label="Main Navigation" className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const active = isActive(item.href)
             const Icon = item.icon
@@ -241,14 +286,19 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500 ${
                   active
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                 }`}
               >
                 <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
-                <span>{item.name}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold leading-snug">{item.name}</div>
+                  <div className={`text-2xs leading-none truncate ${active ? 'text-blue-100' : 'text-slate-400'}`}>
+                    {item.subtitle}
+                  </div>
+                </div>
               </Link>
             )
           })}
@@ -287,21 +337,32 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
       {/* Main Content Area */}
       {/* ========================================================= */}
       <main className="flex-1 md:pl-64 flex flex-col min-h-screen">
-        {/* Top Sticky Header Bar with Global Search */}
+        {/* Top Sticky Header Bar with Global Search & Guide */}
         <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3 shadow-2xs">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex-1 max-w-xl">
               <GlobalSearch />
             </div>
-            <div className="hidden sm:flex items-center gap-4 text-xs font-medium text-slate-500">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-700 font-mono text-2xs">
-                <span>IST</span>
-                <span>UTC+05:30</span>
-              </span>
-              <span className="text-slate-300">|</span>
-              <span className="text-slate-600 truncate max-w-[200px]" title={userEmail}>
-                {userEmail}
-              </span>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsGuideOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 text-xs font-bold transition-colors shadow-2xs"
+                title="Open 5-Step Workflow Guide & Glossary"
+              >
+                <span>📖</span>
+                <span className="hidden sm:inline">How It Works</span>
+              </button>
+              <div className="hidden sm:flex items-center gap-3 text-xs font-medium text-slate-500">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-700 font-mono text-2xs">
+                  <span>IST</span>
+                  <span>UTC+05:30</span>
+                </span>
+                <span className="text-slate-300">|</span>
+                <span className="text-slate-600 truncate max-w-[160px]" title={userEmail}>
+                  {userEmail}
+                </span>
+              </div>
             </div>
           </div>
         </header>
