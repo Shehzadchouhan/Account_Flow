@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/utils/supabase/server'
 import { getCurrentUserRole } from '@/utils/auth'
 import {
@@ -229,21 +230,36 @@ export default async function DashboardPage(props: DashboardPageProps) {
   return (
     <div className="space-y-8">
       {/* Top Banner: Overview & Month Selector */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Live Compliance Overview &bull; Asia/Kolkata
-            </span>
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="flex items-start sm:items-center gap-4">
+          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-2 flex items-center justify-center shadow-xs shrink-0">
+            <Image
+              src="/logo-icon.png"
+              alt="FinanceFlow Logo"
+              width={48}
+              height={48}
+              className="object-contain"
+              priority
+            />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
-            Accounts Office Operations Dashboard
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Real-time compliance tracking, client document handoffs, and CA dispatch pipelines for{' '}
-            <span className="font-semibold text-slate-900">{formatMonthYear(selectedMonth)}</span>.
-          </p>
+          <div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                FinanceFlow Operations
+              </span>
+              <span className="flex items-center gap-1.5 text-2xs font-semibold text-slate-500">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                Live IST (Asia/Kolkata)
+              </span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
+              Accounts & Dispatch Operations Dashboard
+            </h1>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Every Document. Every Deadline. In Flow &bull; Active Month:{' '}
+              <span className="font-semibold text-slate-800">{formatMonthYear(selectedMonth)}</span>
+            </p>
+          </div>
         </div>
 
         {/* Month Selector Form */}

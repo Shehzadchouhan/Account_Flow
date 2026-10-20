@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { logout } from '@/app/auth/actions'
 import { GlobalSearch } from '@/components/GlobalSearch'
@@ -103,19 +104,26 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
       {/* ========================================================= */}
       <header className="md:hidden bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-40">
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <span className="h-9 w-9 rounded-md bg-blue-600 flex items-center justify-center font-bold text-white text-base shadow-xs">
-              FF
-            </span>
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="h-9 w-9 rounded-lg bg-white p-1 flex items-center justify-center shadow-xs shrink-0 border border-slate-700/50">
+              <Image
+                src="/logo-icon.png"
+                alt="FinanceFlow Logo"
+                width={30}
+                height={30}
+                className="object-contain"
+                priority
+              />
+            </div>
             <div>
-              <span className="font-bold text-base tracking-tight block leading-tight">
-                FinanceFlow
+              <span className="font-extrabold text-base tracking-tight block leading-tight text-white">
+                Finance<span className="text-cyan-400">Flow</span>
               </span>
-              <span className="text-xs text-slate-400 block leading-none">
-                Accounts Office
+              <span className="text-2xs text-slate-400 block leading-none mt-0.5 font-medium">
+                Every Document. In Flow.
               </span>
             </div>
-          </div>
+          </Link>
 
           {/* Accessible Mobile Menu Toggle button: >= 44x44px tap target */}
           <button
@@ -198,20 +206,30 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
       {/* Desktop Persistent Left Sidebar */}
       {/* ========================================================= */}
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-slate-900 border-r border-slate-800 text-white z-30">
-        {/* Branding */}
-        <div className="px-6 py-5 border-b border-slate-800 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white text-lg shadow-sm">
-            FF
+        {/* Branding & Home Link */}
+        <Link
+          href="/"
+          className="px-5 py-4 border-b border-slate-800 flex items-center gap-3 group hover:bg-slate-800/40 transition-colors"
+        >
+          <div className="h-10 w-10 rounded-xl bg-white p-1.5 flex items-center justify-center shadow-sm shrink-0 border border-slate-700/60 group-hover:scale-105 transition-transform">
+            <Image
+              src="/logo-icon.png"
+              alt="FinanceFlow Logo"
+              width={34}
+              height={34}
+              className="object-contain"
+              priority
+            />
           </div>
           <div>
-            <span className="text-lg font-bold tracking-tight text-white block leading-tight">
-              FinanceFlow
+            <span className="text-lg font-extrabold tracking-tight text-white block leading-tight">
+              Finance<span className="text-cyan-400">Flow</span>
             </span>
-            <span className="text-xs text-slate-400 font-medium block leading-none">
-              Accounts & Dispatch
+            <span className="text-2xs text-slate-400 font-medium block leading-none mt-1">
+              Every Document. In Flow.
             </span>
           </div>
-        </div>
+        </Link>
 
         {/* Navigation Items */}
         <nav aria-label="Main Navigation" className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">

@@ -13,9 +13,16 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'FinanceFlow | Document Tracking & Dispatch Management',
+  title: 'FinanceFlow | Every Document. Every Deadline. In Flow.',
   description:
-    'Document tracking and dispatch management web application for small finance and accounts offices in India.',
+    'FinanceFlow - Tailored document tracking, compliance cycles, and dispatch management for finance and accounts offices in India.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icon.png' }],
+  },
 }
 
 export default function RootLayout({
