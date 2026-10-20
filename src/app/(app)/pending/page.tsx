@@ -4,13 +4,12 @@ import { createClient } from '@/utils/supabase/server'
 import { requireAuth } from '@/utils/auth'
 import { StatusBadge } from '@/components/StatusBadge'
 import { EmailReminderButton } from '@/components/EmailReminderButton'
-import { PageHelpBanner } from '@/components/PageHelpBanner'
 import { formatDateIST, formatMonthYear } from '@/lib/date-utils'
 import type { CaseCycle, CaseDocumentStatusType } from '@/types/database.types'
 
 export const metadata: Metadata = {
-  title: 'Pending Work & Reminders | FinanceFlow',
-  description: 'Track missing client documents, send reminder emails, and manage documents ready for delivery',
+  title: 'Pending Work | FinanceFlow',
+  description: 'Track missing client documents and files awaiting delivery',
 }
 
 interface PendingPageProps {
@@ -209,18 +208,13 @@ export default async function PendingWorkPage(props: PendingPageProps) {
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Pending Work &amp; Reminders
-            </h1>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
-              {totalCount || 0} Action Items
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-slate-600">
-            Daily action center: documents waiting to be collected from clients, and completed documents ready to deliver.
-          </p>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">
+            Pending Work
+          </h1>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+            {totalCount || 0} items
+          </span>
         </div>
 
         {/* Quick My Work Toggle */}
@@ -231,59 +225,37 @@ export default async function PendingWorkPage(props: PendingPageProps) {
                 ? '/pending'
                 : `/pending?my_work=true${monthFilter !== 'all' ? `&month=${monthFilter}` : ''}`
             }
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border transition-colors shadow-2xs min-h-[40px] ${
+            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors shadow-2xs min-h-[38px] ${
               isMyWork
                 ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
             }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            <span>{isMyWork ? 'Showing My Work (Assigned to Me)' : 'Filter to My Work'}</span>
+            <span>{isMyWork ? 'Assigned to Me' : 'Filter to My Work'}</span>
           </Link>
         </div>
       </div>
 
-      {/* Beginner-friendly page guide */}
-      <PageHelpBanner
-        id="pending-work"
-        title="Pending Work Guide: How to use this screen"
-        description="Every document shown here requires action. Use this page daily to follow up with clients or prepare completed files for handover."
-        steps={[
-          {
-            label: 'Missing from Client?',
-            detail: 'Items marked "Awaiting Receipt" are missing. Click "Email Reminder" to send a pre-filled nudge email with 1 click.',
-          },
-          {
-            label: 'Ready to Deliver?',
-            detail: 'Items marked "Received - Not Dispatched" are in the office. Click into the Case folder to log their dispatch/delivery.',
-          },
-          {
-            label: 'Filter by Staff or Client',
-            detail: 'Use "Filter to My Work" above to see only documents assigned to you, or pick a specific client below.',
-          },
-        ]}
-        tip="Never type reminder emails manually — the 'Email Reminder' button automatically generates a professional email listing all missing documents!"
-      />
-
       {/* Filter Toolbar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs space-y-4">
-        <form method="GET" action="/pending" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3">
+      <div className="bg-white rounded-xl border border-slate-200/80 p-3.5 shadow-2xs">
+        <form method="GET" action="/pending" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5">
           {isMyWork && <input type="hidden" name="my_work" value="true" />}
 
           {/* Firm Filter */}
           <div className="md:col-span-3">
-            <label htmlFor="firm_id" className="block text-xs font-medium text-slate-700 mb-1">
+            <label htmlFor="firm_id" className="block text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
               Client Firm
             </label>
             <select
               id="firm_id"
               name="firm_id"
               defaultValue={firmFilter}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[40px]"
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[38px]"
             >
-              <option value="all">All Active Firms</option>
+              <option value="all">All Firms</option>
               {firmsList.map((firm) => (
                 <option key={firm.id} value={firm.id}>
                   {firm.name}
@@ -294,14 +266,14 @@ export default async function PendingWorkPage(props: PendingPageProps) {
 
           {/* Month Filter */}
           <div className="md:col-span-2">
-            <label htmlFor="month" className="block text-xs font-medium text-slate-700 mb-1">
-              Work Month
+            <label htmlFor="month" className="block text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+              Month
             </label>
             <select
               id="month"
               name="month"
               defaultValue={monthFilter}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[40px]"
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[38px]"
             >
               <option value="all">All Months</option>
               {monthOptions.map((opt) => (
@@ -314,33 +286,33 @@ export default async function PendingWorkPage(props: PendingPageProps) {
 
           {/* Cycle Filter */}
           <div className="md:col-span-2">
-            <label htmlFor="cycle" className="block text-xs font-medium text-slate-700 mb-1">
-              Filing Cycle
+            <label htmlFor="cycle" className="block text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+              Cycle
             </label>
             <select
               id="cycle"
               name="cycle"
               defaultValue={cycleFilter}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[40px]"
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[38px]"
             >
               <option value="all">All Cycles</option>
-              <option value="A_11th">Cycle A (Due 11th - Sales/GSTR-1)</option>
-              <option value="B_20th">Cycle B (Due 20th - Return/GSTR-3B)</option>
+              <option value="A_11th">Cycle A (11th)</option>
+              <option value="B_20th">Cycle B (20th)</option>
             </select>
           </div>
 
           {/* Document Type Filter */}
           <div className="md:col-span-3">
-            <label htmlFor="document_type_id" className="block text-xs font-medium text-slate-700 mb-1">
-              Document Type
+            <label htmlFor="document_type_id" className="block text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+              Doc Type
             </label>
             <select
               id="document_type_id"
               name="document_type_id"
               defaultValue={docTypeFilter}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[40px]"
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[38px]"
             >
-              <option value="all">All Document Types</option>
+              <option value="all">All Types</option>
               {docTypesList.map((dt) => (
                 <option key={dt.id} value={dt.id}>
                   {dt.name}
@@ -351,18 +323,18 @@ export default async function PendingWorkPage(props: PendingPageProps) {
 
           {/* Pending Status Filter */}
           <div className="md:col-span-2">
-            <label htmlFor="status" className="block text-xs font-medium text-slate-700 mb-1">
-              Action Status
+            <label htmlFor="status" className="block text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+              Status
             </label>
             <select
               id="status"
               name="status"
               defaultValue={statusFilter}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[40px]"
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[38px]"
             >
-              <option value="all">All Action Items</option>
-              <option value="awaiting_receipt">Awaiting Receipt (Missing from Client)</option>
-              <option value="received_not_dispatched">Received (Ready to Deliver)</option>
+              <option value="all">All Pending</option>
+              <option value="awaiting_receipt">Awaiting Receipt</option>
+              <option value="received_not_dispatched">Received In-Office</option>
             </select>
           </div>
 

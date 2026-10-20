@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { getCurrentUserRole } from '@/utils/auth'
 import { StatusBadge } from '@/components/StatusBadge'
-import { PageHelpBanner } from '@/components/PageHelpBanner'
 
 export const metadata: Metadata = {
   title: 'Client Directory (Firms) | FinanceFlow',
@@ -115,7 +114,7 @@ export default async function FirmsPage(props: FirmsPageProps) {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Client Directory (Firms)
+              Client Directory
             </h1>
             <div className="flex items-center gap-1.5 text-xs">
               <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
@@ -127,7 +126,7 @@ export default async function FirmsPage(props: FirmsPageProps) {
             </div>
           </div>
           <p className="mt-1 text-sm text-slate-600">
-            Directory of client businesses, contact details, assigned staff, and monthly checklist templates
+            Manage clients, contacts, assigned staff, and monthly document checklists.
           </p>
         </div>
 
@@ -149,28 +148,6 @@ export default async function FirmsPage(props: FirmsPageProps) {
           </Link>
         )}
       </div>
-
-      {/* Beginner-friendly page guide */}
-      <PageHelpBanner
-        id="firms-directory"
-        title="Client Directory Guide: How to manage client profiles"
-        description="Every company, shop, or client whose accounts your office manages is listed here as a Firm."
-        steps={[
-          {
-            label: 'Client Details & Contact',
-            detail: 'Click any firm name to view or update phone numbers, emails, and the assigned team member.',
-          },
-          {
-            label: 'Monthly Checklist Template',
-            detail: 'Inside each client profile, configure their standard list of required papers (e.g. Sales, Purchases, Bank Statements).',
-          },
-          {
-            label: 'Automatic Monthly Copying',
-            detail: 'When new monthly cases are generated, the checklist template is automatically copied so staff know exactly what to collect.',
-          },
-        ]}
-        tip="Keep client phone numbers and email addresses updated so that 1-click email reminders go to the right person!"
-      />
 
       {/* Filter and Search Controls */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs space-y-4">

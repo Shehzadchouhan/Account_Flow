@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { requireAdmin } from '@/utils/auth'
 import { createClient } from '@/utils/supabase/server'
-import { PageHelpBanner } from '@/components/PageHelpBanner'
 
 export const metadata: Metadata = {
   title: 'Administration & Settings | FinanceFlow',
@@ -37,43 +36,21 @@ export default async function AdminPage() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Top Banner */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Administration &amp; Master Settings
+            Administration &amp; Settings
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Team accounts, master document types, Excel client import, and monthly case generation
+          <p className="mt-1 text-sm text-slate-500">
+            Manage staff accounts, document catalogs, client imports, and monthly case generation.
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold shrink-0">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold shrink-0">
           <span className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" aria-hidden="true" />
-          <span>ADMIN ACCESS ({user.email})</span>
+          <span>Admin ({user.email})</span>
         </div>
       </div>
-
-      {/* Beginner-friendly page guide */}
-      <PageHelpBanner
-        id="admin-dashboard"
-        title="Admin Guide: What is managed on this page?"
-        description="This control center is restricted to administrators. Use it to configure your office settings, add staff accounts, and run the monthly case generator."
-        steps={[
-          {
-            label: 'Monthly Case Setup',
-            detail: 'At the start of every month, open the Case Generator below to create folders for all active clients.',
-          },
-          {
-            label: 'Team & Accounts',
-            detail: 'Manage staff members, passwords, and permissions (Admin vs Staff role).',
-          },
-          {
-            label: 'Document Types & Import',
-            detail: 'Configure your office master document catalog, or import clients in bulk from Excel.',
-          },
-        ]}
-        tip="The Monthly Case Generator is completely safe to test — click 'Preview Without Saving' to see what will be created before confirming."
-      />
 
       {/* Featured Primary Action: Monthly Case Generator */}
       <Link

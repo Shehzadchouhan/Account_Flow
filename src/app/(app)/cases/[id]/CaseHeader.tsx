@@ -84,7 +84,6 @@ export function CaseHeader({ caseData, firmContact, missingDocuments = [] }: Cas
               Target Due Date
             </span>
             <div className="text-xl font-bold text-slate-900 mt-0.5">{caseData.due_date}</div>
-            <span className="text-[11px] text-slate-400">Version #{caseData.version}</span>
           </div>
 
           <div className="shrink-0">

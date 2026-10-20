@@ -49,11 +49,11 @@ export function CaseSettingsEditor({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
-            Administrator Case Settings (Due Date &amp; Assignee)
+            Case Settings (Due Date &amp; Assignee)
           </span>
         </div>
         <div className="flex items-center gap-2 text-xs font-semibold text-blue-600">
-          <span>{isOpen ? 'Close Settings' : 'Edit Due Date / Assignee'}</span>
+          <span>{isOpen ? 'Close' : 'Edit Settings'}</span>
           <svg
             className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
             fill="none"

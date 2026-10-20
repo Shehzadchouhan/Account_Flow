@@ -3,7 +3,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/utils/supabase/server'
 import { getCurrentUserRole } from '@/utils/auth'
-import { PageHelpBanner } from '@/components/PageHelpBanner'
 import {
   getCurrentMonthIST,
   getTodayIST,
@@ -229,51 +228,38 @@ export default async function DashboardPage(props: DashboardPageProps) {
   const monthOptions = getMonthOptions()
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Top Banner: Overview & Month Selector */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-        <div className="flex items-start sm:items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-2 flex items-center justify-center shadow-xs shrink-0">
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-1.5 flex items-center justify-center shrink-0">
             <Image
               src="/logo-icon.png"
-              alt="FinanceFlow Logo"
-              width={48}
-              height={48}
+              alt="FinanceFlow"
+              width={32}
+              height={32}
               className="object-contain"
               priority
             />
           </div>
           <div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-                FinanceFlow Operations
-              </span>
-              <span className="flex items-center gap-1.5 text-2xs font-semibold text-slate-500">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                Live IST (Asia/Kolkata)
-              </span>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
-              Accounts & Dispatch Operations Dashboard
+            <h1 className="text-xl font-bold tracking-tight text-slate-900">
+              Operations Dashboard
             </h1>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Every Document. Every Deadline. In Flow &bull; Active Month:{' '}
-              <span className="font-semibold text-slate-800">{formatMonthYear(selectedMonth)}</span>
+            <p className="text-xs text-slate-500">
+              Active Month: <span className="font-semibold text-slate-800">{formatMonthYear(selectedMonth)}</span>
             </p>
           </div>
         </div>
 
         {/* Month Selector Form */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <form method="GET" action="/" className="flex items-center gap-2">
-            <label htmlFor="month-select" className="text-xs font-semibold text-slate-700 whitespace-nowrap">
-              Select Month:
-            </label>
             <select
               id="month-select"
               name="month"
               defaultValue={selectedMonth}
-              className="px-3 py-2 text-sm font-semibold rounded-lg border border-slate-300 text-slate-900 bg-white hover:border-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[40px] shadow-2xs"
+              className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 text-slate-900 bg-white hover:border-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[38px] shadow-2xs"
             >
               {monthOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -283,7 +269,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
             </select>
             <button
               type="submit"
-              className="px-3 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors focus:outline-hidden focus:ring-2 focus:ring-slate-500 min-h-[40px]"
+              className="px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors min-h-[38px]"
             >
               Update
             </button>
@@ -292,9 +278,9 @@ export default async function DashboardPage(props: DashboardPageProps) {
           {isAdmin && (
             <Link
               href="/admin/generate-cases"
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors whitespace-nowrap min-h-[40px]"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors whitespace-nowrap min-h-[38px]"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               <span>Generate Cases</span>
@@ -303,296 +289,247 @@ export default async function DashboardPage(props: DashboardPageProps) {
         </div>
       </div>
 
-      {/* Beginner-friendly collapsible guide */}
-      <PageHelpBanner
-        id="dashboard"
-        title="Dashboard Overview: How to understand this screen"
-        description="This dashboard provides a live operational overview of your firm's accounting work, client folders, and pending documents for the selected month."
-        steps={[
-          {
-            label: 'High Priority Alerts',
-            detail: 'Clients with overdue work or filings due today appear in red/amber for immediate action.',
-          },
-          {
-            label: 'Monthly Progress',
-            detail: 'Track cases awaiting client documents vs. cases ready to be completed and delivered.',
-          },
-          {
-            label: 'Action Items',
-            detail: 'See missing documents from clients or send 1-click email reminders directly.',
-          },
-        ]}
-        tip="Click any card or number below to open the filtered list of cases or documents immediately."
-      />
-
       {/* ========================================================= */}
-      {/* SECTION 1: High Priority Follow-ups */}
+      {/* SECTION 1: Key Priority Alerts */}
       {/* ========================================================= */}
       <div>
-        <div className="flex items-center justify-between mb-3 px-1">
+        <div className="flex items-center justify-between mb-2.5 px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            1. High Priority Follow-ups
+            Priority Alerts
           </h2>
-          <span className="text-xs text-slate-500">Click any card to view the list</span>
+          <span className="text-2xs text-slate-400">Click any card to filter</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* Card 1: Active Firms */}
           <Link
             href="/firms"
-            className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all relative overflow-hidden"
+            className="group bg-white p-4 rounded-xl border border-slate-200/80 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all"
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
               <span>Client Firms</span>
-              <span className="text-slate-400 group-hover:text-blue-600 transition-colors">&rarr;</span>
+              <span className="text-slate-300 group-hover:text-blue-600 transition-colors">&rarr;</span>
             </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-slate-900">
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-2xl font-extrabold text-slate-900">
                 {activeFirmsCount ?? 0}
               </span>
-              <span className="text-xs font-medium text-slate-500">active businesses</span>
+              <span className="text-2xs font-medium text-slate-400">active</span>
             </div>
-            <p className="mt-2 text-xs text-slate-500">
-              Total active client businesses managed in the system
-            </p>
           </Link>
 
           {/* Card 2: Firms Needing Attention */}
           <Link
             href={`/cases?month=${selectedMonth}&attention=true`}
-            className={`group bg-white p-5 rounded-xl border shadow-2xs hover:shadow-xs transition-all relative overflow-hidden ${
+            className={`group bg-white p-4 rounded-xl border shadow-2xs hover:shadow-xs transition-all ${
               firmsNeedingAttentionCount > 0
-                ? 'border-amber-300 hover:border-amber-400 bg-amber-50/20'
-                : 'border-slate-200 hover:border-blue-400'
+                ? 'border-amber-300/80 hover:border-amber-400 bg-amber-50/20'
+                : 'border-slate-200/80 hover:border-blue-400'
             }`}
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Clients Needing Attention</span>
-              <span className="text-slate-400 group-hover:text-amber-600 transition-colors">&rarr;</span>
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+              <span>Needs Attention</span>
+              <span className="text-slate-300 group-hover:text-amber-600 transition-colors">&rarr;</span>
             </div>
-            <div className="mt-3 flex items-baseline gap-2">
+            <div className="mt-2 flex items-baseline gap-2">
               <span
-                className={`text-3xl font-extrabold ${
+                className={`text-2xl font-extrabold ${
                   firmsNeedingAttentionCount > 0 ? 'text-amber-700' : 'text-slate-900'
                 }`}
               >
                 {firmsNeedingAttentionCount}
               </span>
               {firmsNeedingAttentionCount > 0 ? (
-                <span className="text-2xs font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
-                  ACTION REQUIRED
+                <span className="text-2xs font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                  Action needed
                 </span>
               ) : (
-                <span className="text-2xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  ALL ON TRACK
+                <span className="text-2xs font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                  All clear
                 </span>
               )}
             </div>
-            <p className="mt-2 text-xs text-slate-500">
-              Clients with overdue work or documents due today
-            </p>
           </Link>
 
           {/* Card 3: Overdue Cases */}
           <Link
             href={`/cases?month=${selectedMonth}&overdue=true`}
-            className={`group bg-white p-5 rounded-xl border shadow-2xs hover:shadow-xs transition-all relative overflow-hidden ${
+            className={`group bg-white p-4 rounded-xl border shadow-2xs hover:shadow-xs transition-all ${
               casesOverdueCount > 0
-                ? 'border-red-300 hover:border-red-400 bg-red-50/20'
-                : 'border-slate-200 hover:border-blue-400'
+                ? 'border-red-300/80 hover:border-red-400 bg-red-50/20'
+                : 'border-slate-200/80 hover:border-blue-400'
             }`}
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
               <span>Overdue Work</span>
-              <span className="text-slate-400 group-hover:text-red-600 transition-colors">&rarr;</span>
+              <span className="text-slate-300 group-hover:text-red-600 transition-colors">&rarr;</span>
             </div>
-            <div className="mt-3 flex items-baseline gap-2">
+            <div className="mt-2 flex items-baseline gap-2">
               <span
-                className={`text-3xl font-extrabold ${
+                className={`text-2xl font-extrabold ${
                   casesOverdueCount > 0 ? 'text-red-700' : 'text-slate-900'
                 }`}
               >
                 {casesOverdueCount}
               </span>
               {casesOverdueCount > 0 ? (
-                <span className="text-2xs font-bold px-2 py-0.5 rounded bg-red-100 text-red-800 border border-red-300 animate-pulse">
-                  PAST DUE DATE
+                <span className="text-2xs font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-800">
+                  Past due
                 </span>
               ) : (
-                <span className="text-2xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  ZERO OVERDUE
+                <span className="text-2xs font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                  Zero overdue
                 </span>
               )}
             </div>
-            <p className="mt-2 text-xs text-slate-500">
-              Cases where filing target date has passed — follow up needed
-            </p>
           </Link>
 
           {/* Card 4: Due Today */}
           <Link
             href={`/cases?month=${selectedMonth}&due_today=true`}
-            className={`group bg-white p-5 rounded-xl border shadow-2xs hover:shadow-xs transition-all relative overflow-hidden ${
+            className={`group bg-white p-4 rounded-xl border shadow-2xs hover:shadow-xs transition-all ${
               casesDueTodayCount > 0
-                ? 'border-blue-300 hover:border-blue-400 bg-blue-50/20'
-                : 'border-slate-200 hover:border-blue-400'
+                ? 'border-blue-300/80 hover:border-blue-400 bg-blue-50/20'
+                : 'border-slate-200/80 hover:border-blue-400'
             }`}
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
               <span>Due Today</span>
-              <span className="text-slate-400 group-hover:text-blue-600 transition-colors">&rarr;</span>
+              <span className="text-slate-300 group-hover:text-blue-600 transition-colors">&rarr;</span>
             </div>
-            <div className="mt-3 flex items-baseline gap-2">
+            <div className="mt-2 flex items-baseline gap-2">
               <span
-                className={`text-3xl font-extrabold ${
+                className={`text-2xl font-extrabold ${
                   casesDueTodayCount > 0 ? 'text-blue-700' : 'text-slate-900'
                 }`}
               >
                 {casesDueTodayCount}
               </span>
-              <span className="text-xs text-slate-500">client cases</span>
+              <span className="text-2xs font-medium text-slate-400">cases</span>
             </div>
-            <p className="mt-2 text-xs text-slate-500">
-              Due on {formatDateIST(todayIST)} and not yet finished
-            </p>
           </Link>
         </div>
       </div>
 
       {/* ========================================================= */}
-      {/* SECTION 2: Monthly Work Progress */}
+      {/* SECTION 2: Cases Progress */}
       {/* ========================================================= */}
       <div>
-        <div className="flex items-center justify-between mb-3 px-1">
+        <div className="flex items-center justify-between mb-2.5 px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            2. Monthly Work Progress ({formatMonthYear(selectedMonth)})
+            Cases Progress
           </h2>
-          <span className="text-xs font-medium text-slate-500">
-            Total active cases: {monthCases.length}
+          <span className="text-2xs text-slate-400">
+            {monthCases.length} total cases
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* Awaiting Documents */}
           <Link
             href={`/cases?month=${selectedMonth}&status=Awaiting+Documents`}
-            className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-amber-400 shadow-2xs hover:shadow-xs transition-all"
+            className="group bg-white p-4 rounded-xl border border-slate-200/80 hover:border-amber-400 shadow-2xs hover:shadow-xs transition-all"
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Waiting For Client Docs</span>
-              <span className="text-slate-400 group-hover:text-amber-600 transition-colors">&rarr;</span>
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+              <span>Awaiting Documents</span>
+              <span className="text-slate-300 group-hover:text-amber-600 transition-colors">&rarr;</span>
             </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-amber-700">
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-2xl font-extrabold text-amber-700">
                 {casesAwaitingDocsCount}
               </span>
-              <span className="text-xs text-slate-500">cases</span>
+              <span className="text-2xs text-slate-400">cases</span>
             </div>
-            <p className="mt-2 text-xs text-slate-500">
-              Client has not yet sent one or more required papers
-            </p>
           </Link>
 
           {/* Pending Dispatch */}
           <Link
             href={`/cases?month=${selectedMonth}&status=Pending+Dispatch`}
-            className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all"
+            className="group bg-white p-4 rounded-xl border border-slate-200/80 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all"
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Ready For Delivery</span>
-              <span className="text-slate-400 group-hover:text-blue-600 transition-colors">&rarr;</span>
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+              <span>Ready for Delivery</span>
+              <span className="text-slate-300 group-hover:text-blue-600 transition-colors">&rarr;</span>
             </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-blue-700">
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-2xl font-extrabold text-blue-700">
                 {casesPendingDispatchCount}
               </span>
-              <span className="text-xs text-slate-500">cases</span>
+              <span className="text-2xs text-slate-400">cases</span>
             </div>
-            <p className="mt-2 text-xs text-slate-500">
-              All documents in-office; work done and ready to deliver to client
-            </p>
           </Link>
 
           {/* Completed */}
           <Link
             href={`/cases?month=${selectedMonth}&status=Completed`}
-            className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-emerald-400 shadow-2xs hover:shadow-xs transition-all"
+            className="group bg-white p-4 rounded-xl border border-slate-200/80 hover:border-emerald-400 shadow-2xs hover:shadow-xs transition-all"
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Completed Work</span>
-              <span className="text-slate-400 group-hover:text-emerald-600 transition-colors">&rarr;</span>
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+              <span>Completed</span>
+              <span className="text-slate-300 group-hover:text-emerald-600 transition-colors">&rarr;</span>
             </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-emerald-700">
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-2xl font-extrabold text-emerald-700">
                 {casesCompletedCount}
               </span>
-              <span className="text-xs text-slate-500">cases</span>
+              <span className="text-2xs text-slate-400">cases</span>
             </div>
-            <p className="mt-2 text-xs text-slate-500">
-              All documents received, filed, and delivered back to client
-            </p>
           </Link>
 
-          {/* Needs Setup ("No Required Documents") */}
+          {/* Needs Setup */}
           <Link
             href={`/cases?month=${selectedMonth}&status=No+Required+Documents`}
-            className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-slate-400 shadow-2xs hover:shadow-xs transition-all"
+            className="group bg-white p-4 rounded-xl border border-slate-200/80 hover:border-slate-400 shadow-2xs hover:shadow-xs transition-all"
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Needs Checklist Setup</span>
-              <span className="text-slate-400 group-hover:text-slate-600 transition-colors">&rarr;</span>
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+              <span>Needs Setup</span>
+              <span className="text-slate-300 group-hover:text-slate-600 transition-colors">&rarr;</span>
             </div>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-slate-700">
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-2xl font-extrabold text-slate-700">
                 {casesNeedsSetupCount}
               </span>
-              <span className="text-xs text-slate-500">cases</span>
+              <span className="text-2xs text-slate-400">cases</span>
             </div>
-            <p className="mt-2 text-xs text-slate-500">
-              No documents configured; add checklist in client settings
-            </p>
           </Link>
         </div>
       </div>
 
       {/* ========================================================= */}
-      {/* SECTION 3: Document Action Queue */}
+      {/* SECTION 3: Document Backlog */}
       {/* ========================================================= */}
       <div>
-        <div className="flex items-center justify-between mb-3 px-1">
+        <div className="flex items-center justify-between mb-2.5 px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            3. Document Action Queue ({formatMonthYear(selectedMonth)})
+            Document Action Queue
           </h2>
           <Link
             href={`/pending?month=${selectedMonth}`}
             className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
           >
-            View Full Pending List &rarr;
+            View all pending &rarr;
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {/* Received - Not Dispatched */}
           <Link
             href={`/pending?month=${selectedMonth}&status=received_not_dispatched`}
-            className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-amber-400 shadow-2xs hover:shadow-xs transition-all flex items-center justify-between"
+            className="group bg-white p-4 rounded-xl border border-slate-200/80 hover:border-amber-400 shadow-2xs hover:shadow-xs transition-all flex items-center justify-between"
           >
             <div>
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                In-Office &mdash; Ready To Deliver
+              <div className="text-xs font-medium text-slate-500">
+                In-Office &mdash; Ready to Deliver
               </div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-amber-700">
+              <div className="mt-1.5 flex items-baseline gap-2">
+                <span className="text-2xl font-extrabold text-amber-700">
                   {docsReceivedNotDispatchedCount}
                 </span>
-                <span className="text-xs text-slate-500">documents</span>
+                <span className="text-2xs text-slate-400">documents</span>
               </div>
-              <p className="mt-1 text-xs text-slate-500">
-                Documents collected in office; ready to be handed over or couriered to client
-              </p>
             </div>
-            <div className="h-10 w-10 rounded-full bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="h-9 w-9 rounded-full bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
             </div>
@@ -601,24 +538,21 @@ export default async function DashboardPage(props: DashboardPageProps) {
           {/* Awaiting Receipt */}
           <Link
             href={`/pending?month=${selectedMonth}&status=awaiting_receipt`}
-            className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all flex items-center justify-between"
+            className="group bg-white p-4 rounded-xl border border-slate-200/80 hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all flex items-center justify-between"
           >
             <div>
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Waiting For Client To Send
+              <div className="text-xs font-medium text-slate-500">
+                Waiting from Clients
               </div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-blue-700">
+              <div className="mt-1.5 flex items-baseline gap-2">
+                <span className="text-2xl font-extrabold text-blue-700">
                   {docsAwaitingReceiptCount}
                 </span>
-                <span className="text-xs text-slate-500">documents</span>
+                <span className="text-2xs text-slate-400">documents</span>
               </div>
-              <p className="mt-1 text-xs text-slate-500">
-                Checklist items pending from clients (click to view &amp; send 1-click email reminder)
-              </p>
             </div>
-            <div className="h-10 w-10 rounded-full bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="h-9 w-9 rounded-full bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
@@ -627,18 +561,13 @@ export default async function DashboardPage(props: DashboardPageProps) {
       </div>
 
       {/* ========================================================= */}
-      {/* SECTION 4: Workload by Employee Table */}
+      {/* SECTION 4: Team Workload Table */}
       {/* ========================================================= */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <h2 className="text-base font-bold text-slate-900">
-              Team Workload &bull; {formatMonthYear(selectedMonth)}
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Assigned client cases, pending documents, and active deadlines per team member
-            </p>
-          </div>
+      <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-200/80 flex items-center justify-between">
+          <h2 className="text-sm font-bold text-slate-900">
+            Team Workload
+          </h2>
           <div className="text-xs text-slate-500 font-medium">
             {workloadRows.length} active assignees
           </div>

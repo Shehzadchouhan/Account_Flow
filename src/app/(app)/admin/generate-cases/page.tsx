@@ -5,7 +5,7 @@ import { CaseGeneratorForm } from './CaseGeneratorForm'
 
 export const metadata: Metadata = {
   title: 'Generate Monthly Cases | FinanceFlow',
-  description: 'Generate compliance dockets for active client firms with preview and dry run',
+  description: 'Generate monthly cases and checklists for active client firms with preview and dry run',
 }
 
 export default async function GenerateCasesPage() {
@@ -30,8 +30,8 @@ export default async function GenerateCasesPage() {
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           Monthly Case Generator
         </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Generate compliance cycle dockets for all active client firms. Copies checklist templates into operational cases with dry-run verification.
+        <p className="mt-1 text-sm text-slate-500">
+          Create monthly work folders and checklists for all active clients. Preview changes safely before saving.
         </p>
       </div>
 
