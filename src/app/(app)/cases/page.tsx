@@ -90,19 +90,20 @@ export default async function CasesPage(props: CasesPageProps) {
   const currentPage = Math.max(1, parseInt(searchParams.page || '1', 10))
   const pageSize = 25
 
-  const role = await getCurrentUserRole()
+  const [role, supabase] = await Promise.all([
+    getCurrentUserRole(),
+    createClient(),
+  ])
   const isAdmin = role === 'admin'
 
-  const supabase = await createClient()
-
   // 1. Fetch metadata for filters: active profiles and active firms
-  const { data: staffList } = await supabase
+  const staffQuery = supabase
     .from('profiles')
     .select('id, full_name')
     .eq('is_active', true)
     .order('full_name', { ascending: true })
 
-  const { data: firmsList } = await supabase
+  const firmsQuery = supabase
     .from('firms')
     .select('id, name')
     .order('name', { ascending: true })
@@ -181,10 +182,16 @@ export default async function CasesPage(props: CasesPageProps) {
   const fromIndex = (currentPage - 1) * pageSize
   const toIndex = fromIndex + pageSize - 1
 
-  const { data: casesData, count: totalFilteredCount, error } = await query
+  const casesQuery = query
     .order('due_date', { ascending: true })
     .order('firm_name', { ascending: true })
     .range(fromIndex, toIndex)
+
+  const [
+    { data: staffList },
+    { data: firmsList },
+    { data: casesData, count: totalFilteredCount, error },
+  ] = await Promise.all([staffQuery, firmsQuery, casesQuery])
 
   const cases = casesData as unknown as CaseListItem[]
   const totalPages = Math.ceil((totalFilteredCount || 0) / pageSize) || 1
@@ -419,95 +426,178 @@ export default async function CasesPage(props: CasesPageProps) {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600 font-semibold text-xs uppercase tracking-wider">
-                <tr>
-                  <th scope="col" className="px-6 py-3.5">
-                    Client Firm Name
-                  </th>
-                  <th scope="col" className="px-6 py-3.5">
-                    Period &amp; Cycle
-                  </th>
-                  <th scope="col" className="px-6 py-3.5">
-                    Due Date
-                  </th>
-                  <th scope="col" className="px-6 py-3.5">
-                    Assigned Staff
-                  </th>
-                  <th scope="col" className="px-6 py-3.5">
-                    Checklist Progress
-                  </th>
-                  <th scope="col" className="px-6 py-3.5">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3.5 text-right">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {cases.map((c) => {
-                  const assignee = c.profiles?.full_name || 'Unassigned'
-                  const monthFormatted = new Date(`${c.period_month}T00:00:00Z`).toLocaleString(
-                    'en-US',
-                    { month: 'short', year: 'numeric', timeZone: 'UTC' }
-                  )
-                  const cycleLabel = c.cycle === 'A_11th' ? 'Cycle A (11th)' : 'Cycle B (20th)'
+          <>
+            {/* Desktop Table View (hidden on mobile, visible on md+) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+                <thead className="bg-slate-50 text-slate-600 font-semibold text-xs uppercase tracking-wider">
+                  <tr>
+                    <th scope="col" className="px-6 py-3.5">
+                      Client Firm Name
+                    </th>
+                    <th scope="col" className="px-6 py-3.5">
+                      Period &amp; Cycle
+                    </th>
+                    <th scope="col" className="px-6 py-3.5">
+                      Due Date
+                    </th>
+                    <th scope="col" className="px-6 py-3.5">
+                      Assigned Staff
+                    </th>
+                    <th scope="col" className="px-6 py-3.5">
+                      Checklist Progress
+                    </th>
+                    <th scope="col" className="px-6 py-3.5">
+                      Status
+                    </th>
+                    <th scope="col" className="px-6 py-3.5 text-right">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {cases.map((c) => {
+                    const assignee = c.profiles?.full_name || 'Unassigned'
+                    const monthFormatted = new Date(`${c.period_month}T00:00:00Z`).toLocaleString(
+                      'en-US',
+                      { month: 'short', year: 'numeric', timeZone: 'UTC' }
+                    )
+                    const cycleLabel = c.cycle === 'A_11th' ? 'Cycle A (11th)' : 'Cycle B (20th)'
 
-                  return (
-                    <tr key={c.case_id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
+                    return (
+                      <tr key={c.case_id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
+                          <Link
+                            href={`/cases/${c.case_id}`}
+                            className="hover:text-blue-600 font-semibold focus:outline-hidden focus:underline flex items-center gap-1.5"
+                          >
+                            {c.firm_name}
+                          </Link>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-700">
+                          <div className="font-semibold text-slate-900">{monthFormatted}</div>
+                          <div className="text-slate-500">{cycleLabel}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-xs">
+                          <div className="font-medium text-slate-900">{c.due_date}</div>
+                          {c.is_overdue && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 mt-0.5">
+                              <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
+                              OVERDUE
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-xs">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                            {assignee}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-700">
+                          <div>
+                            <strong>{c.received_count}</strong> of <strong>{c.required_count}</strong> required received
+                          </div>
+                          <div className="text-slate-500 text-[11px]">
+                            {c.dispatched_count} dispatched
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <StatusBadge status={c.status} size="sm" />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <Link
+                            href={`/cases/${c.case_id}`}
+                            className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[36px]"
+                          >
+                            Open Checklist &rarr;
+                          </Link>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Stacked Card View (visible on mobile, hidden on md+) */}
+            <div className="block md:hidden divide-y divide-slate-100">
+              {cases.map((c) => {
+                const assignee = c.profiles?.full_name || 'Unassigned'
+                const monthFormatted = new Date(`${c.period_month}T00:00:00Z`).toLocaleString(
+                  'en-US',
+                  { month: 'short', year: 'numeric', timeZone: 'UTC' }
+                )
+                const cycleLabel = c.cycle === 'A_11th' ? 'Cycle A (11th)' : 'Cycle B (20th)'
+
+                return (
+                  <div key={`mobile-${c.case_id}`} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
                         <Link
                           href={`/cases/${c.case_id}`}
-                          className="hover:text-blue-600 font-semibold focus:outline-hidden focus:underline flex items-center gap-1.5"
+                          className="font-bold text-slate-900 text-sm hover:text-blue-600 transition-colors block truncate"
                         >
                           {c.firm_name}
                         </Link>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-700">
-                        <div className="font-semibold text-slate-900">{monthFormatted}</div>
-                        <div className="text-slate-500">{cycleLabel}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs">
-                        <div className="font-medium text-slate-900">{c.due_date}</div>
-                        {c.is_overdue && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 mt-0.5">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
-                            OVERDUE
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          {monthFormatted} &bull; {cycleLabel}
+                        </div>
+                      </div>
+                      <div className="shrink-0">
+                        <StatusBadge status={c.status} size="sm" />
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 space-y-1.5 text-xs">
+                      <div className="flex items-center justify-between text-slate-600">
+                        <span>Due Date:</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={c.is_overdue ? 'font-bold text-red-600' : 'font-medium text-slate-800'}>
+                            {c.due_date}
                           </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                          {c.is_overdue && (
+                            <span className="px-1.5 py-0.5 text-2xs font-extrabold uppercase rounded bg-red-100 text-red-800 border border-red-300">
+                              OVERDUE
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-slate-600">
+                        <span>Assigned Staff:</span>
+                        <span className="font-medium text-slate-800">
                           {assignee}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-700">
-                        <div>
-                          <strong>{c.received_count}</strong> of <strong>{c.required_count}</strong> required received
+                      </div>
+
+                      <div className="flex items-center justify-between text-slate-600 pt-1 border-t border-slate-200/60">
+                        <span>Checklist Progress:</span>
+                        <span className="font-medium text-slate-800">
+                          <strong>{c.received_count}</strong> / {c.required_count} received
+                        </span>
+                      </div>
+
+                      {c.dispatched_count > 0 && (
+                        <div className="flex items-center justify-between text-2xs text-slate-500">
+                          <span>Dispatches:</span>
+                          <span>{c.dispatched_count} dispatched</span>
                         </div>
-                        <div className="text-slate-500 text-[11px]">
-                          {c.dispatched_count} dispatched
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={c.status} size="sm" />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <Link
-                          href={`/cases/${c.case_id}`}
-                          className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[36px]"
-                        >
-                          Open Checklist &rarr;
-                        </Link>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                      )}
+                    </div>
+
+                    <div className="pt-1 flex items-center justify-end">
+                      <Link
+                        href={`/cases/${c.case_id}`}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1 px-4 py-2 text-xs font-semibold rounded-lg text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors min-h-[38px]"
+                      >
+                        <span>Open Docket Checklist</span>
+                        <span aria-hidden="true">&rarr;</span>
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
 
         {/* Pagination Footer */}

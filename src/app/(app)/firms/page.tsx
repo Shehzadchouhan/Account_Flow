@@ -41,25 +41,26 @@ export default async function FirmsPage(props: FirmsPageProps) {
   const currentPage = Math.max(1, parseInt(searchParams.page || '1', 10))
   const pageSize = 25
 
-  const role = await getCurrentUserRole()
+  const [role, supabase] = await Promise.all([
+    getCurrentUserRole(),
+    createClient(),
+  ])
   const isAdmin = role === 'admin'
 
-  const supabase = await createClient()
-
   // 1. Fetch active profiles for staff filter dropdown
-  const { data: staffList } = await supabase
+  const staffQuery = supabase
     .from('profiles')
     .select('id, full_name')
     .eq('is_active', true)
     .order('full_name', { ascending: true })
 
   // 2. Fetch overall active and archived counts
-  const { count: activeCount } = await supabase
+  const activeCountQuery = supabase
     .from('firms')
     .select('*', { count: 'exact', head: true })
     .eq('is_active', true)
 
-  const { count: archivedCount } = await supabase
+  const archivedCountQuery = supabase
     .from('firms')
     .select('*', { count: 'exact', head: true })
     .eq('is_active', false)
@@ -100,9 +101,21 @@ export default async function FirmsPage(props: FirmsPageProps) {
   const fromIndex = (currentPage - 1) * pageSize
   const toIndex = fromIndex + pageSize - 1
 
-  const { data: firms, count: totalFilteredCount, error } = await query
+  const firmsQuery = query
     .order('name', { ascending: true })
     .range(fromIndex, toIndex)
+
+  const [
+    { data: staffList },
+    { count: activeCount },
+    { count: archivedCount },
+    { data: firms, count: totalFilteredCount, error },
+  ] = await Promise.all([
+    staffQuery,
+    activeCountQuery,
+    archivedCountQuery,
+    firmsQuery,
+  ])
 
   const totalPages = Math.ceil((totalFilteredCount || 0) / pageSize) || 1
   const hasFilters = Boolean(search || statusFilter !== 'active' || assignedTo)
@@ -133,7 +146,7 @@ export default async function FirmsPage(props: FirmsPageProps) {
         {isAdmin && (
           <Link
             href="/firms/new"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-xs transition-colors focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shrink-0 min-h-[44px]"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-xs transition-colors focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shrink-0 min-h-[44px]"
           >
             <svg
               className="w-4 h-4"
@@ -302,77 +315,152 @@ export default async function FirmsPage(props: FirmsPageProps) {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600 font-semibold text-xs uppercase tracking-wider">
-                <tr>
-                  <th scope="col" className="px-6 py-3.5">
-                    Client Firm Name
-                  </th>
-                  <th scope="col" className="px-6 py-3.5">
-                    Primary Contact
-                  </th>
-                  <th scope="col" className="px-6 py-3.5">
-                    Contact Info
-                  </th>
-                  <th scope="col" className="px-6 py-3.5">
-                    Assigned Staff
-                  </th>
-                  <th scope="col" className="px-6 py-3.5">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3.5 text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {(firms as unknown as FirmListItem[])?.map((firm) => {
-                  const assignedPerson = firm.profiles?.full_name || 'Unassigned'
-                  return (
-                    <tr key={firm.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
+          <>
+            {/* Desktop Table View (hidden on mobile, visible on md+) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+                <thead className="bg-slate-50 text-slate-600 font-semibold text-xs uppercase tracking-wider">
+                  <tr>
+                    <th scope="col" className="px-6 py-3.5">
+                      Client Firm Name
+                    </th>
+                    <th scope="col" className="px-6 py-3.5">
+                      Primary Contact
+                    </th>
+                    <th scope="col" className="px-6 py-3.5">
+                      Contact Info
+                    </th>
+                    <th scope="col" className="px-6 py-3.5">
+                      Assigned Staff
+                    </th>
+                    <th scope="col" className="px-6 py-3.5">
+                      Status
+                    </th>
+                    <th scope="col" className="px-6 py-3.5 text-right">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {(firms as unknown as FirmListItem[])?.map((firm) => {
+                    const assignedPerson = firm.profiles?.full_name || 'Unassigned'
+                    return (
+                      <tr key={firm.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
+                          <Link
+                            href={`/firms/${firm.id}`}
+                            className="hover:text-blue-600 font-semibold flex items-center gap-1.5 focus:outline-hidden focus:underline"
+                          >
+                            {firm.name}
+                          </Link>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-slate-700">
+                          {firm.contact_person || (
+                            <span className="text-slate-400 italic">Not specified</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-600 space-y-0.5">
+                          {firm.contact_email && <div>{firm.contact_email}</div>}
+                          {firm.contact_phone && <div>{firm.contact_phone}</div>}
+                          {!firm.contact_email && !firm.contact_phone && (
+                            <span className="text-slate-400 italic">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-slate-700">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                            {assignedPerson}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <StatusBadge status={firm.is_active ? 'ACTIVE' : 'ARCHIVED'} size="sm" />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <Link
+                            href={`/firms/${firm.id}`}
+                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[36px]"
+                          >
+                            {isAdmin ? 'Manage' : 'View Details'}
+                          </Link>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Stacked Firm Cards (visible on mobile, hidden on md+) */}
+            <div className="block md:hidden divide-y divide-slate-100">
+              {(firms as unknown as FirmListItem[])?.map((firm) => {
+                const assignedPerson = firm.profiles?.full_name || 'Unassigned'
+                return (
+                  <div key={`mobile-${firm.id}`} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
                         <Link
                           href={`/firms/${firm.id}`}
-                          className="hover:text-blue-600 font-semibold flex items-center gap-1.5 focus:outline-hidden focus:underline"
+                          className="font-bold text-slate-900 text-base hover:text-blue-600 transition-colors block truncate"
                         >
                           {firm.name}
                         </Link>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-700">
-                        {firm.contact_person || (
-                          <span className="text-slate-400 italic">Not specified</span>
+                        {firm.contact_person && (
+                          <div className="text-xs text-slate-500 mt-0.5">
+                            Contact: <span className="font-medium text-slate-700">{firm.contact_person}</span>
+                          </div>
                         )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-600 space-y-0.5">
-                        {firm.contact_email && <div>{firm.contact_email}</div>}
-                        {firm.contact_phone && <div>{firm.contact_phone}</div>}
-                        {!firm.contact_email && !firm.contact_phone && (
-                          <span className="text-slate-400 italic">—</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-700">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                      </div>
+                      <div className="shrink-0">
+                        <StatusBadge status={firm.is_active ? 'ACTIVE' : 'ARCHIVED'} size="sm" />
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 space-y-1.5 text-xs">
+                      {firm.contact_email && (
+                        <div className="flex items-center justify-between text-slate-600">
+                          <span>Email:</span>
+                          <a
+                            href={`mailto:${firm.contact_email}`}
+                            className="font-medium text-blue-600 hover:underline truncate max-w-[200px]"
+                          >
+                            {firm.contact_email}
+                          </a>
+                        </div>
+                      )}
+
+                      {firm.contact_phone && (
+                        <div className="flex items-center justify-between text-slate-600">
+                          <span>Phone:</span>
+                          <a
+                            href={`tel:${firm.contact_phone}`}
+                            className="font-medium text-blue-600 hover:underline"
+                          >
+                            {firm.contact_phone}
+                          </a>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between text-slate-600 pt-1 border-t border-slate-200/60">
+                        <span>Assigned Staff:</span>
+                        <span className="font-medium text-slate-800">
                           {assignedPerson}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={firm.is_active ? 'ACTIVE' : 'ARCHIVED'} size="sm" />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <Link
-                          href={`/firms/${firm.id}`}
-                          className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[36px]"
-                        >
-                          {isAdmin ? 'Manage' : 'View Details'}
-                        </Link>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-1 flex items-center justify-end">
+                      <Link
+                        href={`/firms/${firm.id}`}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1 px-4 py-2 text-xs font-semibold rounded-lg text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors min-h-[38px]"
+                      >
+                        <span>{isAdmin ? 'Manage Firm & Checklist' : 'View Firm Details'}</span>
+                        <span aria-hidden="true">&rarr;</span>
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
 
         {/* Pagination Footer */}

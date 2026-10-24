@@ -114,7 +114,7 @@ export function CaseGeneratorForm() {
   return (
     <div className="space-y-8">
       {/* Parameter Configuration Form */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-6">
         <div>
           <h2 className="text-lg font-bold text-slate-900">1. Generation Parameters</h2>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -182,14 +182,14 @@ export function CaseGeneratorForm() {
           </div>
 
           {/* Action Row */}
-          <div className="md:col-span-3 flex items-center justify-between pt-4 border-t border-slate-100">
+          <div className="md:col-span-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-slate-100">
             <span className="text-xs text-slate-500">
               Step 1 of 2: Safe preview &mdash; see exactly which client folders will be created before saving
             </span>
             <button
               type="submit"
               disabled={isPending}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 rounded-lg min-h-[44px] transition-colors shadow-xs"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 rounded-lg min-h-[44px] transition-colors shadow-xs w-full sm:w-auto"
             >
               {isPending && !previewResult ? (
                 <>
@@ -209,7 +209,7 @@ export function CaseGeneratorForm() {
 
       {/* Step 2: Dry Run Preview Breakdown */}
       {previewResult && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-6 animate-in fade-in duration-200">
+        <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-6 animate-in fade-in duration-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
             <div>
               <div className="flex items-center gap-2">
@@ -226,7 +226,7 @@ export function CaseGeneratorForm() {
                 type="button"
                 disabled={isPending}
                 onClick={() => setShowConfirmModal(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 rounded-lg min-h-[44px] shadow-xs transition-colors shrink-0"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 rounded-lg min-h-[44px] shadow-xs transition-colors shrink-0 w-full sm:w-auto"
               >
                 Confirm &amp; Generate {previewResult.created_count} Cases
               </button>
@@ -286,7 +286,7 @@ export function CaseGeneratorForm() {
                 </div>
                 <ul className="divide-y divide-emerald-100 bg-white text-xs text-slate-800">
                   {previewResult.created_firms.map((firm) => (
-                    <li key={firm.firm_id} className="px-4 py-2 flex items-center justify-between">
+                    <li key={firm.firm_id} className="px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                       <span className="font-semibold text-slate-900">{firm.firm_name}</span>
                       <span className="text-slate-500">
                         {firm.template_items_count} checklist documents configured
@@ -316,7 +316,7 @@ export function CaseGeneratorForm() {
             {/* Skipped No Template Firms */}
             {previewResult.skipped_no_template_count > 0 && (
               <div className="border border-amber-200 rounded-xl overflow-hidden">
-                <div className="bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-900 flex items-center justify-between">
+                <div className="bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                   <span>Firms Without Template Items ({previewResult.skipped_no_template_count})</span>
                   <span className="text-[11px] font-normal text-amber-700">
                     Add template items in firm profile to include in future runs
@@ -324,7 +324,7 @@ export function CaseGeneratorForm() {
                 </div>
                 <ul className="divide-y divide-amber-100 bg-white text-xs text-slate-700">
                   {previewResult.skipped_no_template_firms.map((firm) => (
-                    <li key={firm.firm_id} className="px-4 py-2 flex items-center justify-between">
+                    <li key={firm.firm_id} className="px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                       <span>{firm.firm_name}</span>
                       <Link
                         href={`/firms/${firm.firm_id}`}
@@ -345,33 +345,35 @@ export function CaseGeneratorForm() {
       {/* Confirmation Modal */}
       {showConfirmModal && previewResult && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-labelledby="confirm-case-gen-title"
         >
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in duration-150">
-            <div>
-              <h4 id="confirm-case-gen-title" className="text-lg font-bold text-slate-900">
-                Confirm Case Generation
-              </h4>
-              <p className="text-xs text-slate-600 mt-1">
-                You are about to generate <strong>{previewResult.created_count} new cases</strong> for{' '}
-                <strong>{previewResult.period_month}</strong> ({previewResult.cycle}).
-              </p>
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-4 sm:p-6 space-y-5 animate-in fade-in zoom-in duration-150 max-h-[92vh] flex flex-col my-auto overflow-hidden">
+            <div className="overflow-y-auto flex-1 min-h-0 space-y-4 pr-1">
+              <div>
+                <h4 id="confirm-case-gen-title" className="text-lg font-bold text-slate-900">
+                  Confirm Case Generation
+                </h4>
+                <p className="text-xs text-slate-600 mt-1">
+                  You are about to generate <strong>{previewResult.created_count} new cases</strong> for{' '}
+                  <strong>{previewResult.period_month}</strong> ({previewResult.cycle}).
+                </p>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-lg text-xs text-slate-600 space-y-1">
+                <div>• Due date will be set to: <strong>{previewResult.due_date}</strong></div>
+                <div>• Each case will inherit its firm&apos;s default staff assignee</div>
+                <div>• Checklist documents will be copied from firm templates</div>
+              </div>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-lg text-xs text-slate-600 space-y-1">
-              <div>• Due date will be set to: <strong>{previewResult.due_date}</strong></div>
-              <div>• Each case will inherit its firm&apos;s default staff assignee</div>
-              <div>• Checklist documents will be copied from firm templates</div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-3 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 min-h-[38px]"
+                className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 min-h-[38px] text-center"
               >
                 Cancel
               </button>
@@ -379,7 +381,7 @@ export function CaseGeneratorForm() {
                 type="button"
                 disabled={isPending}
                 onClick={handleConfirmGeneration}
-                className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg min-h-[38px]"
+                className="w-full sm:w-auto px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg min-h-[38px] text-center"
               >
                 {isPending ? 'Generating...' : 'Yes, Generate Cases Now'}
               </button>
@@ -390,7 +392,7 @@ export function CaseGeneratorForm() {
 
       {/* Final Execution Success Card */}
       {executionResult && (
-        <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-8 text-center space-y-4 animate-in fade-in duration-200">
+        <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-5 sm:p-8 text-center space-y-4 animate-in fade-in duration-200">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xs">
             <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -407,10 +409,10 @@ export function CaseGeneratorForm() {
             </p>
           </div>
 
-          <div className="flex items-center justify-center gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2">
             <Link
               href={`/cases?month=${executionResult.period_month}&cycle=${executionResult.cycle}`}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg shadow-xs min-h-[44px]"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg shadow-xs min-h-[44px] w-full sm:w-auto"
             >
               View Generated Cases in Directory &rarr;
             </Link>
@@ -420,7 +422,7 @@ export function CaseGeneratorForm() {
                 setExecutionResult(null)
                 setPreviewResult(null)
               }}
-              className="px-4 py-2 text-xs font-medium text-emerald-900 hover:underline"
+              className="px-4 py-2 text-xs font-medium text-emerald-900 hover:underline min-h-[44px] flex items-center justify-center"
             >
               Generate More Cases
             </button>

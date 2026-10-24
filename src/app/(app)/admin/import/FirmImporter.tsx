@@ -146,7 +146,7 @@ export function FirmImporter() {
   return (
     <div className="space-y-6">
       {/* 1. Downloadable Template Callout */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-base font-bold text-slate-900">
             Download Import Template
@@ -155,11 +155,11 @@ export function FirmImporter() {
             Download our standard formatted spreadsheet with predefined columns: Firm Name, Contact Person, Email, Phone, Default Employee Email, Required Documents, and Optional Documents.
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <a
             href="/api/admin/template?format=xlsx"
             download
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition-colors shadow-2xs"
+            className="inline-flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition-colors shadow-2xs min-h-[38px] flex-1 sm:flex-none"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -169,7 +169,7 @@ export function FirmImporter() {
           <a
             href="/api/admin/template?format=csv"
             download
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-800 border border-slate-300 hover:bg-slate-200 transition-colors shadow-2xs"
+            className="inline-flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-800 border border-slate-300 hover:bg-slate-200 transition-colors shadow-2xs min-h-[38px] flex-1 sm:flex-none"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -181,7 +181,7 @@ export function FirmImporter() {
 
       {/* 2. File Upload Area */}
       {!previewResult && !confirmResult && (
-        <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-2xs text-center space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-8 shadow-2xs text-center space-y-4">
           <div className="max-w-md mx-auto space-y-3">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-600 mb-2">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,7 +216,7 @@ export function FirmImporter() {
               type="button"
               onClick={handleParse}
               disabled={!file || isParsing}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors shadow-2xs"
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors shadow-2xs min-h-[44px]"
             >
               {isParsing ? (
                 <>
@@ -236,7 +236,7 @@ export function FirmImporter() {
 
       {/* 3. Successful Import Result Banner */}
       {confirmResult && (
-        <div className="bg-white rounded-xl border border-emerald-200 p-8 shadow-xs text-center space-y-4">
+        <div className="bg-white rounded-xl border border-emerald-200 p-5 sm:p-8 shadow-xs text-center space-y-4">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 mb-1">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -255,10 +255,10 @@ export function FirmImporter() {
             )}
           </p>
 
-          <div className="flex items-center justify-center gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 pt-4">
             <Link
               href="/firms"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-2xs"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-2xs min-h-[44px]"
             >
               <span>View Registered Firms</span>
               <span aria-hidden="true">&rarr;</span>
@@ -268,7 +268,7 @@ export function FirmImporter() {
               <button
                 type="button"
                 onClick={downloadErrorReport}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors min-h-[44px]"
               >
                 <span>Download Error Report (CSV)</span>
               </button>
@@ -277,7 +277,7 @@ export function FirmImporter() {
             <button
               type="button"
               onClick={handleReset}
-              className="px-4 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900"
+              className="px-4 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 min-h-[44px] flex items-center justify-center"
             >
               Import Another File
             </button>
@@ -370,12 +370,12 @@ export function FirmImporter() {
 
           {/* Table Header Filter Toolbar */}
           <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold text-slate-700">Filter Preview:</span>
               <button
                 type="button"
                 onClick={() => setStatusFilter('all')}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors min-h-[32px] ${
                   statusFilter === 'all'
                     ? 'bg-slate-900 text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -386,7 +386,7 @@ export function FirmImporter() {
               <button
                 type="button"
                 onClick={() => setStatusFilter('valid')}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors min-h-[32px] ${
                   statusFilter === 'valid'
                     ? 'bg-emerald-600 text-white'
                     : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
@@ -397,7 +397,7 @@ export function FirmImporter() {
               <button
                 type="button"
                 onClick={() => setStatusFilter('issues')}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors min-h-[32px] ${
                   statusFilter === 'issues'
                     ? 'bg-amber-600 text-white'
                     : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
@@ -407,12 +407,12 @@ export function FirmImporter() {
               </button>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {previewResult.issueCount > 0 && (
                 <button
                   type="button"
                   onClick={downloadErrorReport}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 transition-colors min-h-[36px]"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -424,7 +424,7 @@ export function FirmImporter() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800"
+                className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 min-h-[36px] flex items-center"
               >
                 Discard &amp; Re-upload
               </button>
@@ -516,11 +516,11 @@ export function FirmImporter() {
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="px-4 py-2 text-xs font-semibold rounded-lg text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold rounded-lg text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors min-h-[40px] text-center"
                 >
                   Cancel
                 </button>
@@ -529,7 +529,7 @@ export function FirmImporter() {
                   type="button"
                   onClick={handleConfirmImport}
                   disabled={effectiveValidRows.length === 0 || isConfirming}
-                  className="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors shadow-2xs"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors shadow-2xs min-h-[40px] text-center"
                 >
                   {isConfirming ? (
                     <>

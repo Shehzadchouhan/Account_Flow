@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { cache } from 'react'
 import { createClient } from '@/utils/supabase/server'
 import type { User } from '@supabase/supabase-js'
 import type { UserRole } from '@/types/database.types'
@@ -45,7 +46,7 @@ export async function getCurrentUser(): Promise<User | null> {
  * Retrieves the full user context including profile, role, and active status.
  * Fails safely by returning null if unauthenticated or profile not found.
  */
-export async function getCurrentUserProfile(): Promise<UserContext | null> {
+export const getCurrentUserProfile = cache(async function getCurrentUserProfile(): Promise<UserContext | null> {
   const user = await getCurrentUser()
   if (!user) {
     return null
@@ -82,7 +83,7 @@ export async function getCurrentUserProfile(): Promise<UserContext | null> {
     console.error('Error querying profiles table for user context:', err)
     return null
   }
-}
+})
 
 /**
  * Retrieves the role for the current user directly from the 'profiles' table.

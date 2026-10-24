@@ -28,13 +28,14 @@ export default async function FirmDetailPage(props: FirmDetailPageProps) {
   const params = await props.params
   const firmId = params.id
 
-  const role = await getCurrentUserRole()
+  const [role, supabase] = await Promise.all([
+    getCurrentUserRole(),
+    createClient(),
+  ])
   const isAdmin = role === 'admin'
 
-  const supabase = await createClient()
-
   // 1. Fetch Firm record
-  const { data: firm, error: firmError } = await supabase
+  const firmQuery = supabase
     .from('firms')
     .select(
       `
@@ -53,12 +54,8 @@ export default async function FirmDetailPage(props: FirmDetailPageProps) {
     .eq('id', firmId)
     .single()
 
-  if (firmError || !firm) {
-    notFound()
-  }
-
   // 2. Fetch configured checklist template items
-  const { data: templateItems } = await supabase
+  const templateItemsQuery = supabase
     .from('firm_template_items')
     .select(
       `
@@ -72,18 +69,34 @@ export default async function FirmDetailPage(props: FirmDetailPageProps) {
     .eq('firm_id', firmId)
 
   // 3. Fetch active document types in the catalog
-  const { data: availableDocumentTypes } = await supabase
+  const availableDocumentTypesQuery = supabase
     .from('document_types')
     .select('id, name, description, is_active')
     .eq('is_active', true)
     .order('name', { ascending: true })
 
   // 4. Fetch active office staff members for default employee reassignment
-  const { data: staffMembers } = await supabase
+  const staffMembersQuery = supabase
     .from('profiles')
     .select('id, full_name')
     .eq('is_active', true)
     .order('full_name', { ascending: true })
+
+  const [
+    { data: firm, error: firmError },
+    { data: templateItems },
+    { data: availableDocumentTypes },
+    { data: staffMembers },
+  ] = await Promise.all([
+    firmQuery,
+    templateItemsQuery,
+    availableDocumentTypesQuery,
+    staffMembersQuery,
+  ])
+
+  if (firmError || !firm) {
+    notFound()
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">

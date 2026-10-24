@@ -9,39 +9,55 @@ export const metadata: Metadata = {
 }
 
 export default async function AdminPage() {
-  const user = await requireAdmin()
-  const supabase = await createClient()
+  const [user, supabase] = await Promise.all([
+    requireAdmin(),
+    createClient(),
+  ])
 
   // Fetch quick metrics
-  const { count: usersCount } = await supabase
+  const usersQuery = supabase
     .from('profiles')
     .select('*', { count: 'exact', head: true })
 
-  const { count: docTypesCount } = await supabase
+  const docTypesQuery = supabase
     .from('document_types')
     .select('*', { count: 'exact', head: true })
 
-  const { count: firmsCount } = await supabase
+  const firmsQuery = supabase
     .from('firms')
     .select('*', { count: 'exact', head: true })
 
-  const { count: casesCount } = await supabase
+  const casesQuery = supabase
     .from('cases')
     .select('*', { count: 'exact', head: true })
 
-  const { count: activityLogsCount } = await supabase
+  const activityLogsQuery = supabase
     .from('activity_logs')
     .select('*', { count: 'exact', head: true })
+
+  const [
+    { count: usersCount },
+    { count: docTypesCount },
+    { count: firmsCount },
+    { count: casesCount },
+    { count: activityLogsCount },
+  ] = await Promise.all([
+    usersQuery,
+    docTypesQuery,
+    firmsQuery,
+    casesQuery,
+    activityLogsQuery,
+  ])
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Top Banner */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
             Administration &amp; Settings
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-xs sm:text-sm text-slate-500">
             Manage staff accounts, document catalogs, client imports, and monthly case generation.
           </p>
         </div>
@@ -55,12 +71,12 @@ export default async function AdminPage() {
       {/* Featured Primary Action: Monthly Case Generator */}
       <Link
         href="/admin/generate-cases"
-        className="group block p-6 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-blue-800"
+        className="group block p-4 sm:p-6 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-blue-800"
       >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-white/10 rounded-xl shrink-0 group-hover:bg-white/20 transition-colors">
-              <svg className="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="p-2.5 sm:p-3 bg-white/10 rounded-xl shrink-0 group-hover:bg-white/20 transition-colors">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -76,7 +92,7 @@ export default async function AdminPage() {
                 </span>
                 <span className="text-xs text-blue-300">Run at month start</span>
               </div>
-              <h2 className="text-xl font-bold mt-1 text-white group-hover:text-blue-100 flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-bold mt-1 text-white group-hover:text-blue-100 flex items-center gap-2">
                 Monthly Case Generator
                 <span className="text-blue-300 group-hover:translate-x-1 transition-transform">&rarr;</span>
               </h2>
@@ -85,14 +101,14 @@ export default async function AdminPage() {
               </p>
             </div>
           </div>
-          <span className="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-lg bg-white text-blue-950 hover:bg-blue-50 shrink-0">
+          <span className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg bg-white text-blue-950 hover:bg-blue-50 shrink-0 min-h-[38px]">
             Open Generator
           </span>
         </div>
       </Link>
 
       {/* Administration Hub Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* User Administration Card */}
         <Link
           href="/admin/users"
@@ -243,11 +259,11 @@ export default async function AdminPage() {
       </div>
 
       {/* Quick Summary Card */}
-      <div className="bg-slate-50 rounded-xl border border-slate-200 p-6 space-y-3">
+      <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 sm:p-6 space-y-3">
         <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">
           Office Directory Snapshot
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-2">
           <div className="bg-white p-4 rounded-lg border border-slate-200">
             <span className="text-xs text-slate-500 font-medium">Total Generated Cases</span>
             <div className="text-2xl font-bold text-slate-900 mt-1">{casesCount || 0}</div>

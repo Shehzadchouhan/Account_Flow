@@ -123,8 +123,8 @@ export function GlobalSearch() {
               setIsOpen(true)
             }
           }}
-          placeholder="Search firms, cases, documents... (Ctrl+K)"
-          className="w-full pl-9 pr-9 py-2 text-sm bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 focus:border-blue-500 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-100 transition-colors shadow-2xs"
+          placeholder="Search firms, cases, docs... (Ctrl+K)"
+          className="w-full pl-9 pr-9 py-2 text-sm bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 focus:border-blue-500 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-100 transition-colors shadow-2xs min-h-[38px]"
         />
 
         {query && (

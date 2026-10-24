@@ -457,7 +457,8 @@ export function UserManager({ profiles, currentUserId, hasServiceRoleKey = false
         </div>
 
         {/* Table Content */}
-        <div className="overflow-x-auto">
+        {/* Desktop Table View (hidden on mobile, visible on md+) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
             <thead className="bg-slate-50 text-slate-600 font-semibold text-xs uppercase tracking-wider">
               <tr>
@@ -608,6 +609,87 @@ export function UserManager({ profiles, currentUserId, hasServiceRoleKey = false
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Stacked Team Cards (visible on mobile, hidden on md+) */}
+        <div className="block md:hidden divide-y divide-slate-100">
+          {filteredProfiles.length === 0 ? (
+            <div className="p-8 text-center text-slate-500">
+              <p className="font-semibold text-slate-700">No team members match the filter</p>
+            </div>
+          ) : (
+            filteredProfiles.map((profile) => {
+              const isCurrentUser = profile.id === currentUserId
+              const isToggling = togglingUserId === profile.id
+
+              return (
+                <div key={`mobile-${profile.id}`} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5 truncate">
+                        <span>{profile.full_name}</span>
+                        {isCurrentUser && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-sm">
+                            You
+                          </span>
+                        )}
+                      </div>
+                      {profile.email && (
+                        <div className="text-xs text-slate-500 font-mono mt-0.5 truncate">
+                          {profile.email}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <StatusBadge
+                        status={profile.role === 'admin' ? 'ADMIN' : 'STAFF'}
+                        size="sm"
+                      />
+                      <StatusBadge
+                        status={profile.is_active ? 'ACTIVE' : 'INACTIVE'}
+                        size="sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                    {!profile.is_active ? (
+                      <button
+                        type="button"
+                        disabled={isToggling}
+                        onClick={() => handleQuickToggle(profile.id, true)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg text-emerald-800 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 min-h-[36px]"
+                      >
+                        <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>{isToggling ? 'Activating...' : 'Activate Account'}</span>
+                      </button>
+                    ) : (
+                      !isCurrentUser && (
+                        <button
+                          type="button"
+                          disabled={isToggling}
+                          onClick={() => handleQuickToggle(profile.id, false)}
+                          className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-red-700 bg-slate-50 border border-slate-200 min-h-[36px]"
+                        >
+                          <span>{isToggling ? 'Updating...' : 'Deactivate'}</span>
+                        </button>
+                      )
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(profile)}
+                      className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 min-h-[36px]"
+                    >
+                      Edit Profile
+                    </button>
+                  </div>
+                </div>
+              )
+            })
+          )}
         </div>
 
         {/* Footer info */}

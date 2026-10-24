@@ -17,11 +17,11 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="how-it-works-title"
-      className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
     >
-      <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] my-auto">
         {/* Header */}
-        <div className="px-6 py-5 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs shrink-0">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,7 +34,7 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
               </svg>
             </div>
             <div>
-              <h2 id="how-it-works-title" className="text-xl font-bold tracking-tight text-white">
+              <h2 id="how-it-works-title" className="text-lg sm:text-xl font-bold tracking-tight text-white">
                 How FinanceFlow Works
               </h2>
               <p className="text-xs text-blue-200 mt-0.5">
@@ -56,11 +56,11 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 bg-slate-50 px-6 gap-2">
+        <div className="flex overflow-x-auto border-b border-slate-200 bg-slate-50 px-3 sm:px-6 gap-1 sm:gap-2">
           <button
             type="button"
             onClick={() => setActiveTab('workflow')}
-            className={`py-3 px-4 text-xs font-bold border-b-2 transition-colors ${
+            className={`py-2.5 sm:py-3 px-3 sm:px-4 text-xs font-bold border-b-2 transition-colors whitespace-nowrap min-h-[40px] flex items-center shrink-0 ${
               activeTab === 'workflow'
                 ? 'border-blue-600 text-blue-700 bg-white shadow-2xs'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -71,7 +71,7 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
           <button
             type="button"
             onClick={() => setActiveTab('glossary')}
-            className={`py-3 px-4 text-xs font-bold border-b-2 transition-colors ${
+            className={`py-2.5 sm:py-3 px-3 sm:px-4 text-xs font-bold border-b-2 transition-colors whitespace-nowrap min-h-[40px] flex items-center shrink-0 ${
               activeTab === 'glossary'
                 ? 'border-blue-600 text-blue-700 bg-white shadow-2xs'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -82,7 +82,7 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
           <button
             type="button"
             onClick={() => setActiveTab('faq')}
-            className={`py-3 px-4 text-xs font-bold border-b-2 transition-colors ${
+            className={`py-2.5 sm:py-3 px-3 sm:px-4 text-xs font-bold border-b-2 transition-colors whitespace-nowrap min-h-[40px] flex items-center shrink-0 ${
               activeTab === 'faq'
                 ? 'border-blue-600 text-blue-700 bg-white shadow-2xs'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -93,7 +93,7 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
         </div>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-700 text-sm">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6 flex-1 text-slate-700 text-sm">
           {activeTab === 'workflow' && (
             <div className="space-y-4">
               <p className="text-xs text-slate-500 font-medium">
@@ -291,14 +291,14 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-          <div className="text-xs text-slate-500">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs text-slate-500 text-center sm:text-left">
             Need more help? Check with your office administrator.
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors"
+            className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors min-h-[40px] text-center"
           >
             Got It! Close Guide
           </button>

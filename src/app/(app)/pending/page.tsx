@@ -69,8 +69,11 @@ interface PendingDocumentRow {
 }
 
 export default async function PendingWorkPage(props: PendingPageProps) {
-  const user = await requireAuth()
-  const searchParams = await props.searchParams
+  const [user, searchParams, supabase] = await Promise.all([
+    requireAuth(),
+    props.searchParams,
+    createClient(),
+  ])
 
   const firmFilter = searchParams.firm_id || 'all'
   const employeeFilter = searchParams.employee || 'all'
@@ -85,28 +88,19 @@ export default async function PendingWorkPage(props: PendingPageProps) {
   const currentPage = Math.max(1, parseInt(searchParams.page || '1', 10))
   const pageSize = 25
 
-  const supabase = await createClient()
-
-  // 1. Fetch metadata for filter dropdowns
-  const [firmsRes, staffRes, docTypesRes] = await Promise.all([
-    supabase.from('firms').select('id, name, contact_person, contact_email, contact_phone').order('name', { ascending: true }),
-    supabase.from('profiles').select('id, full_name').eq('is_active', true).order('full_name', { ascending: true }),
-    supabase.from('document_types').select('id, name').order('name', { ascending: true }),
-  ])
-
-  const firmsList = firmsRes.data || []
-  const staffList = staffRes.data || []
-  const docTypesList = docTypesRes.data || []
-  const monthOptions = getMonthOptions()
-
-  // Map firm contacts for 1-click reminders
-  const firmContactMap = new Map<string, { contact_person: string | null; contact_email: string | null }>()
-  for (const firm of firmsList) {
-    firmContactMap.set(firm.id, {
-      contact_person: firm.contact_person,
-      contact_email: firm.contact_email,
-    })
-  }
+  const firmsQuery = supabase
+    .from('firms')
+    .select('id, name, contact_person, contact_email, contact_phone')
+    .order('name', { ascending: true })
+  const staffQuery = supabase
+    .from('profiles')
+    .select('id, full_name')
+    .eq('is_active', true)
+    .order('full_name', { ascending: true })
+  const docTypesQuery = supabase
+    .from('document_types')
+    .select('id, name')
+    .order('name', { ascending: true })
 
   // 2. Query case_document_status view
   // Scope: Active firms only and undispatched documents
@@ -132,7 +126,9 @@ export default async function PendingWorkPage(props: PendingPageProps) {
       notes,
       created_at,
       status,
-      is_overdue
+      is_overdue,
+      file_url,
+      file_name
     `,
       { count: 'exact' }
     )
@@ -181,10 +177,29 @@ export default async function PendingWorkPage(props: PendingPageProps) {
   const fromIndex = (currentPage - 1) * pageSize
   const toIndex = fromIndex + pageSize - 1
 
-  const { data: rawRows, count: totalCount, error } = await query
+  const rowsQuery = query
     .order('due_date', { ascending: sortOrder === 'asc' })
     .order('firm_name', { ascending: true })
     .range(fromIndex, toIndex)
+
+  const [
+    { data: firmsList },
+    { data: staffList },
+    { data: docTypesList },
+    { data: rawRows, count: totalCount, error },
+  ] = await Promise.all([firmsQuery, staffQuery, docTypesQuery, rowsQuery])
+
+  const availableFirms = firmsList || []
+  const availableStaff = staffList || []
+  const availableDocTypes = docTypesList || []
+  const monthOptions = getMonthOptions()
+  const firmContactMap = new Map<string, { contact_person: string | null; contact_email: string | null }>()
+  for (const firm of availableFirms) {
+    firmContactMap.set(firm.id, {
+      contact_person: firm.contact_person,
+      contact_email: firm.contact_email,
+    })
+  }
 
   const rows = (rawRows || []) as unknown as PendingDocumentRow[]
   const totalPages = Math.ceil((totalCount || 0) / pageSize) || 1
@@ -254,7 +269,7 @@ export default async function PendingWorkPage(props: PendingPageProps) {
               className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[38px]"
             >
               <option value="all">All Firms</option>
-              {firmsList.map((firm) => (
+              {availableFirms.map((firm) => (
                 <option key={firm.id} value={firm.id}>
                   {firm.name}
                 </option>
@@ -311,7 +326,7 @@ export default async function PendingWorkPage(props: PendingPageProps) {
               className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[38px]"
             >
               <option value="all">All Types</option>
-              {docTypesList.map((dt) => (
+              {availableDocTypes.map((dt) => (
                 <option key={dt.id} value={dt.id}>
                   {dt.name}
                 </option>
@@ -350,7 +365,7 @@ export default async function PendingWorkPage(props: PendingPageProps) {
             >
               <option value="all">All Staff Members</option>
               <option value="unassigned">Unassigned Only</option>
-              {staffList.map((staff) => (
+              {availableStaff.map((staff) => (
                 <option key={staff.id} value={staff.id}>
                   {staff.full_name}
                 </option>
@@ -419,7 +434,7 @@ export default async function PendingWorkPage(props: PendingPageProps) {
                 <span className="font-semibold text-slate-700">Active Filters:</span>
                 {firmFilter !== 'all' && (
                   <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">
-                    Firm: {firmsList.find((f) => f.id === firmFilter)?.name || firmFilter}
+                    Firm: {availableFirms.find((f) => f.id === firmFilter)?.name || firmFilter}
                   </span>
                 )}
                 {monthFilter !== 'all' && (
@@ -493,52 +508,190 @@ export default async function PendingWorkPage(props: PendingPageProps) {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
-                <tr>
-                  <th scope="col" className="px-4 py-3">Client Firm</th>
-                  <th scope="col" className="px-4 py-3">Compliance Case</th>
-                  <th scope="col" className="px-4 py-3">Checklist Document</th>
-                  <th scope="col" className="px-4 py-3">Calculated Status</th>
-                  <th scope="col" className="px-4 py-3">Reason / Next Step</th>
-                  <th scope="col" className="px-4 py-3">Due Date (IST)</th>
-                  <th scope="col" className="px-4 py-3">Assignee</th>
-                  <th scope="col" className="px-4 py-3 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {rows.map((row) => {
-                  const plainReason =
-                    row.status === 'Received - Not Dispatched'
-                      ? 'Received but not dispatched'
-                      : 'Awaiting receipt from firm'
+          <>
+            {/* Desktop Table View (hidden on mobile, visible on md+) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-600">
+                <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th scope="col" className="px-4 py-3">Client Firm</th>
+                    <th scope="col" className="px-4 py-3">Compliance Case</th>
+                    <th scope="col" className="px-4 py-3">Checklist Document</th>
+                    <th scope="col" className="px-4 py-3">Calculated Status</th>
+                    <th scope="col" className="px-4 py-3">Reason / Next Step</th>
+                    <th scope="col" className="px-4 py-3">Due Date (IST)</th>
+                    <th scope="col" className="px-4 py-3">Assignee</th>
+                    <th scope="col" className="px-4 py-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {rows.map((row) => {
+                    const plainReason =
+                      row.status === 'Received - Not Dispatched'
+                        ? 'Received but not dispatched'
+                        : 'Awaiting receipt from firm'
 
-                  return (
-                    <tr key={row.case_document_id} className="hover:bg-slate-50/80 transition-colors">
-                      {/* Firm */}
-                      <td className="px-4 py-3.5 font-semibold text-slate-900 whitespace-nowrap">
+                    return (
+                      <tr key={row.case_document_id} className="hover:bg-slate-50/80 transition-colors">
+                        {/* Firm */}
+                        <td className="px-4 py-3.5 font-semibold text-slate-900 whitespace-nowrap">
+                          <Link
+                            href={`/firms/${row.firm_id}`}
+                            className="hover:text-blue-600 transition-colors"
+                          >
+                            {row.firm_name}
+                          </Link>
+                        </td>
+
+                        {/* Case (Month / Cycle) */}
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <div className="text-slate-900 font-medium">
+                            {formatMonthYear(row.period_month)}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {row.cycle === 'A_11th' ? 'Cycle A (11th)' : 'Cycle B (20th)'}
+                          </div>
+                        </td>
+
+                        {/* Document */}
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <div className="font-medium text-slate-900 flex items-center gap-1.5">
+                            <span>{row.document_type_name}</span>
+                            {row.file_url && (
+                              <a
+                                href={row.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-2xs font-semibold rounded bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
+                                title={row.file_name || 'View Scan'}
+                              >
+                                <span>📄 Scan</span>
+                              </a>
+                            )}
+                          </div>
+                          <div className="mt-0.5">
+                            {row.is_required ? (
+                              <span className="text-2xs font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                REQUIRED
+                              </span>
+                            ) : (
+                              <span className="text-2xs font-medium text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
+                                OPTIONAL
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <StatusBadge status={row.status} />
+                        </td>
+
+                        {/* Plain-Language Reason */}
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ${
+                              row.status === 'Received - Not Dispatched'
+                                ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                                : 'bg-blue-50 text-blue-800 border border-blue-200'
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                row.status === 'Received - Not Dispatched'
+                                  ? 'bg-amber-500'
+                                  : 'bg-blue-500'
+                              }`}
+                            />
+                            {plainReason}
+                          </span>
+                        </td>
+
+                        {/* Due Date & Overdue Label */}
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <span className={row.is_overdue ? 'font-semibold text-red-600' : 'text-slate-700'}>
+                              {formatDateIST(row.due_date)}
+                            </span>
+                            {row.is_overdue && (
+                              <span className="px-1.5 py-0.5 text-2xs font-extrabold uppercase tracking-wider rounded bg-red-100 text-red-800 border border-red-300">
+                                OVERDUE
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Assignee */}
+                        <td className="px-4 py-3.5 whitespace-nowrap text-slate-600">
+                          {row.assigned_to_name ? (
+                            <span className="font-medium text-slate-800">{row.assigned_to_name}</span>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">Unassigned</span>
+                          )}
+                        </td>
+
+                        {/* Action Links */}
+                        <td className="px-4 py-3.5 whitespace-nowrap text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {row.status === 'Awaiting Receipt' && (
+                              <EmailReminderButton
+                                variant="compact"
+                                firmName={row.firm_name}
+                                contactPerson={firmContactMap.get(row.firm_id)?.contact_person}
+                                contactEmail={firmContactMap.get(row.firm_id)?.contact_email}
+                                periodMonth={row.period_month}
+                                cycle={row.cycle}
+                                dueDate={row.due_date}
+                                missingDocuments={[row.document_type_name]}
+                                senderName={row.assigned_to_name}
+                              />
+                            )}
+                            <Link
+                              href={`/cases/${row.case_id}`}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 rounded-lg border border-blue-200 transition-colors min-h-[36px]"
+                            >
+                              <span>View Case</span>
+                              <span aria-hidden="true">&rarr;</span>
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Stacked Card View (hidden on md+) */}
+            <div className="block md:hidden divide-y divide-slate-100">
+              {rows.map((row) => {
+                const plainReason =
+                  row.status === 'Received - Not Dispatched'
+                    ? 'Received but not dispatched'
+                    : 'Awaiting receipt from firm'
+
+                return (
+                  <div key={row.case_document_id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
                         <Link
                           href={`/firms/${row.firm_id}`}
-                          className="hover:text-blue-600 transition-colors"
+                          className="font-bold text-slate-900 text-sm hover:text-blue-600 transition-colors block truncate"
                         >
                           {row.firm_name}
                         </Link>
-                      </td>
-
-                      {/* Case (Month / Cycle) */}
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        <div className="text-slate-900 font-medium">
-                          {formatMonthYear(row.period_month)}
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          {formatMonthYear(row.period_month)} &bull; {row.cycle === 'A_11th' ? 'Cycle A (11th)' : 'Cycle B (20th)'}
                         </div>
-                        <div className="text-xs text-slate-500">
-                          {row.cycle === 'A_11th' ? 'Cycle A (11th)' : 'Cycle B (20th)'}
-                        </div>
-                      </td>
+                      </div>
+                      <div className="shrink-0">
+                        <StatusBadge status={row.status} />
+                      </div>
+                    </div>
 
-                      {/* Document */}
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        <div className="font-medium text-slate-900 flex items-center gap-1.5">
+                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 space-y-1.5 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-800 flex items-center gap-1.5">
                           <span>{row.document_type_name}</span>
                           {row.file_url && (
                             <a
@@ -551,29 +704,44 @@ export default async function PendingWorkPage(props: PendingPageProps) {
                               <span>📄 Scan</span>
                             </a>
                           )}
-                        </div>
-                        <div className="mt-0.5">
+                        </span>
+                        <span>
                           {row.is_required ? (
-                            <span className="text-2xs font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                            <span className="text-2xs font-bold text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-200">
                               REQUIRED
                             </span>
                           ) : (
-                            <span className="text-2xs font-medium text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
+                            <span className="text-2xs font-medium text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">
                               OPTIONAL
                             </span>
                           )}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-slate-600 pt-1 border-t border-slate-200/60">
+                        <span>Due Date:</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={row.is_overdue ? 'font-bold text-red-600' : 'font-medium text-slate-800'}>
+                            {formatDateIST(row.due_date)}
+                          </span>
+                          {row.is_overdue && (
+                            <span className="px-1.5 py-0.5 text-2xs font-extrabold uppercase rounded bg-red-100 text-red-800 border border-red-300">
+                              OVERDUE
+                            </span>
+                          )}
                         </div>
-                      </td>
+                      </div>
 
-                      {/* Status */}
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        <StatusBadge status={row.status} />
-                      </td>
+                      <div className="flex items-center justify-between text-slate-600">
+                        <span>Assigned To:</span>
+                        <span className="font-medium text-slate-800">
+                          {row.assigned_to_name || 'Unassigned'}
+                        </span>
+                      </div>
 
-                      {/* Plain-Language Reason */}
-                      <td className="px-4 py-3.5 whitespace-nowrap">
+                      <div className="pt-1">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ${
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-semibold ${
                             row.status === 'Received - Not Dispatched'
                               ? 'bg-amber-50 text-amber-800 border border-amber-200'
                               : 'bg-blue-50 text-blue-800 border border-blue-200'
@@ -581,74 +749,46 @@ export default async function PendingWorkPage(props: PendingPageProps) {
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
-                              row.status === 'Received - Not Dispatched'
-                                ? 'bg-amber-500'
-                                : 'bg-blue-500'
+                              row.status === 'Received - Not Dispatched' ? 'bg-amber-500' : 'bg-blue-500'
                             }`}
                           />
                           {plainReason}
                         </span>
-                      </td>
+                      </div>
+                    </div>
 
-                      {/* Due Date & Overdue Label */}
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <span className={row.is_overdue ? 'font-semibold text-red-600' : 'text-slate-700'}>
-                            {formatDateIST(row.due_date)}
-                          </span>
-                          {row.is_overdue && (
-                            <span className="px-1.5 py-0.5 text-2xs font-extrabold uppercase tracking-wider rounded bg-red-100 text-red-800 border border-red-300">
-                              OVERDUE
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Assignee */}
-                      <td className="px-4 py-3.5 whitespace-nowrap text-slate-600">
-                        {row.assigned_to_name ? (
-                          <span className="font-medium text-slate-800">{row.assigned_to_name}</span>
-                        ) : (
-                          <span className="text-xs text-slate-400 italic">Unassigned</span>
-                        )}
-                      </td>
-
-                      {/* Action Links */}
-                      <td className="px-4 py-3.5 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {row.status === 'Awaiting Receipt' && (
-                            <EmailReminderButton
-                              variant="compact"
-                              firmName={row.firm_name}
-                              contactPerson={firmContactMap.get(row.firm_id)?.contact_person}
-                              contactEmail={firmContactMap.get(row.firm_id)?.contact_email}
-                              periodMonth={row.period_month}
-                              cycle={row.cycle}
-                              dueDate={row.due_date}
-                              missingDocuments={[row.document_type_name]}
-                              senderName={row.assigned_to_name}
-                            />
-                          )}
-                          <Link
-                            href={`/cases/${row.case_id}`}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 rounded-lg border border-blue-200 transition-colors"
-                          >
-                            <span>View Case</span>
-                            <span aria-hidden="true">&rarr;</span>
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                    <div className="pt-1 flex items-center justify-end gap-2 flex-wrap">
+                      {row.status === 'Awaiting Receipt' && (
+                        <EmailReminderButton
+                          variant="compact"
+                          firmName={row.firm_name}
+                          contactPerson={firmContactMap.get(row.firm_id)?.contact_person}
+                          contactEmail={firmContactMap.get(row.firm_id)?.contact_email}
+                          periodMonth={row.period_month}
+                          cycle={row.cycle}
+                          dueDate={row.due_date}
+                          missingDocuments={[row.document_type_name]}
+                          senderName={row.assigned_to_name}
+                        />
+                      )}
+                      <Link
+                        href={`/cases/${row.case_id}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 rounded-lg border border-blue-200 transition-colors min-h-[36px]"
+                      >
+                        <span>View Case</span>
+                        <span aria-hidden="true">&rarr;</span>
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
 
         {/* Pagination Bar */}
         {totalCount !== null && totalCount > 0 && (
-          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-slate-600">
             <div>
               Showing <span className="font-semibold text-slate-900">{fromIndex + 1}</span> to{' '}
               <span className="font-semibold text-slate-900">

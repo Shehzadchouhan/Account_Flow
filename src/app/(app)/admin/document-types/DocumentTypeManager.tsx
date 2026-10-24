@@ -99,7 +99,7 @@ export function DocumentTypeManager({ documentTypes }: DocumentTypeManagerProps)
       )}
 
       {/* Creation Card */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-4">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-4">
         <div>
           <h2 className="text-base font-bold text-slate-900">Add New Document Type</h2>
           <p className="mt-0.5 text-xs text-slate-500">
@@ -161,14 +161,14 @@ export function DocumentTypeManager({ documentTypes }: DocumentTypeManagerProps)
 
       {/* Catalog Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h3 className="text-base font-bold text-slate-900">Document Catalog</h3>
             <p className="text-xs text-slate-500 mt-0.5">
               Master catalog of {documentTypes.length} registered document categories
             </p>
           </div>
-          <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md font-medium">
+          <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md font-medium self-start sm:self-auto">
             Permanent Records (No Hard Delete)
           </span>
         </div>
@@ -178,48 +178,82 @@ export function DocumentTypeManager({ documentTypes }: DocumentTypeManagerProps)
             No document types registered yet. Add one above.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600 font-semibold text-xs uppercase tracking-wider">
-                <tr>
-                  <th scope="col" className="px-6 py-3.5">
-                    Document Type
-                  </th>
-                  <th scope="col" className="px-6 py-3.5">
-                    Description
-                  </th>
-                  <th scope="col" className="px-6 py-3.5">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3.5 text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {documentTypes.map((doc) => {
-                  const isEditing = editingDocId === doc.id
-                  const isPending = pendingActionId === doc.id
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+                <thead className="bg-slate-50 text-slate-600 font-semibold text-xs uppercase tracking-wider">
+                  <tr>
+                    <th scope="col" className="px-6 py-3.5">
+                      Document Type
+                    </th>
+                    <th scope="col" className="px-6 py-3.5">
+                      Description
+                    </th>
+                    <th scope="col" className="px-6 py-3.5">
+                      Status
+                    </th>
+                    <th scope="col" className="px-6 py-3.5 text-right">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {documentTypes.map((doc) => {
+                    const isEditing = editingDocId === doc.id
+                    const isPending = pendingActionId === doc.id
 
-                  if (isEditing) {
+                    if (isEditing) {
+                      return (
+                        <tr key={doc.id} className="bg-blue-50/50">
+                          <td className="px-6 py-4">
+                            <input
+                              type="text"
+                              value={editName}
+                              onChange={(e) => setEditName(e.target.value)}
+                              required
+                              className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 bg-white"
+                            />
+                          </td>
+                          <td className="px-6 py-4">
+                            <input
+                              type="text"
+                              value={editDescription}
+                              onChange={(e) => setEditDescription(e.target.value)}
+                              className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 bg-white"
+                            />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <StatusBadge status={doc.is_active ? 'ACTIVE' : 'INACTIVE'} size="sm" />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                            <button
+                              type="button"
+                              disabled={isPending}
+                              onClick={() => handleSaveEdit(doc.id, doc.is_active)}
+                              className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg min-h-[32px]"
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCancelEdit}
+                              className="text-xs font-medium text-slate-600 bg-white border border-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-50 min-h-[32px]"
+                            >
+                              Cancel
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    }
+
                     return (
-                      <tr key={doc.id} className="bg-blue-50/50">
-                        <td className="px-6 py-4">
-                          <input
-                            type="text"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            required
-                            className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 bg-white"
-                          />
+                      <tr key={doc.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap font-semibold text-slate-900">
+                          {doc.name}
                         </td>
-                        <td className="px-6 py-4">
-                          <input
-                            type="text"
-                            value={editDescription}
-                            onChange={(e) => setEditDescription(e.target.value)}
-                            className="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 bg-white"
-                          />
+                        <td className="px-6 py-4 text-xs text-slate-600 max-w-md">
+                          {doc.description || <span className="text-slate-400 italic">—</span>}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <StatusBadge status={doc.is_active ? 'ACTIVE' : 'INACTIVE'} size="sm" />
@@ -227,62 +261,125 @@ export function DocumentTypeManager({ documentTypes }: DocumentTypeManagerProps)
                         <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
                           <button
                             type="button"
-                            disabled={isPending}
-                            onClick={() => handleSaveEdit(doc.id, doc.is_active)}
-                            className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg min-h-[32px]"
+                            onClick={() => handleStartEdit(doc)}
+                            className="text-xs font-medium text-slate-700 hover:text-slate-900 bg-white border border-slate-300 hover:bg-slate-50 px-2.5 py-1.5 rounded-lg min-h-[36px]"
                           >
-                            Save
+                            Rename / Edit
                           </button>
                           <button
                             type="button"
-                            onClick={handleCancelEdit}
-                            className="text-xs font-medium text-slate-600 bg-white border border-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-50 min-h-[32px]"
+                            disabled={isPending}
+                            onClick={() => handleToggleActive(doc.id, doc.is_active)}
+                            className={`text-xs font-medium px-2.5 py-1.5 rounded-lg border min-h-[36px] ${
+                              doc.is_active
+                                ? 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100'
+                                : 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
+                            }`}
                           >
-                            Cancel
+                            {doc.is_active ? 'Deactivate' : 'Activate'}
                           </button>
                         </td>
                       </tr>
                     )
-                  }
+                  })}
+                </tbody>
+              </table>
+            </div>
 
+            {/* Mobile Stacked Cards View */}
+            <div className="block md:hidden divide-y divide-slate-100">
+              {documentTypes.map((doc) => {
+                const isEditing = editingDocId === doc.id
+                const isPending = pendingActionId === doc.id
+
+                if (isEditing) {
                   return (
-                    <tr key={doc.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap font-semibold text-slate-900">
-                        {doc.name}
-                      </td>
-                      <td className="px-6 py-4 text-xs text-slate-600 max-w-md">
-                        {doc.description || <span className="text-slate-400 italic">—</span>}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={doc.is_active ? 'ACTIVE' : 'INACTIVE'} size="sm" />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => handleStartEdit(doc)}
-                          className="text-xs font-medium text-slate-700 hover:text-slate-900 bg-white border border-slate-300 hover:bg-slate-50 px-2.5 py-1.5 rounded-lg min-h-[36px]"
-                        >
-                          Rename / Edit
-                        </button>
+                    <div key={doc.id} className="p-4 bg-blue-50/40 space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Document Type Name
+                        </label>
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          required
+                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white min-h-[40px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Description
+                        </label>
+                        <input
+                          type="text"
+                          value={editDescription}
+                          onChange={(e) => setEditDescription(e.target.value)}
+                          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white min-h-[40px]"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 pt-1">
                         <button
                           type="button"
                           disabled={isPending}
-                          onClick={() => handleToggleActive(doc.id, doc.is_active)}
-                          className={`text-xs font-medium px-2.5 py-1.5 rounded-lg border min-h-[36px] ${
-                            doc.is_active
-                              ? 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100'
-                              : 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
-                          }`}
+                          onClick={() => handleSaveEdit(doc.id, doc.is_active)}
+                          className="flex-1 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg min-h-[40px] text-center"
                         >
-                          {doc.is_active ? 'Deactivate' : 'Activate'}
+                          Save Changes
                         </button>
-                      </td>
-                    </tr>
+                        <button
+                          type="button"
+                          onClick={handleCancelEdit}
+                          className="flex-1 px-4 py-2 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 min-h-[40px] text-center"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
                   )
-                })}
-              </tbody>
-            </table>
-          </div>
+                }
+
+                return (
+                  <div key={doc.id} className="p-4 space-y-2 hover:bg-slate-50/50 transition-colors">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-semibold text-slate-900 text-sm">{doc.name}</span>
+                      <StatusBadge status={doc.is_active ? 'ACTIVE' : 'INACTIVE'} size="sm" />
+                    </div>
+
+                    {doc.description ? (
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        {doc.description}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">No description provided</p>
+                    )}
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(doc)}
+                        className="flex-1 px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg min-h-[40px] text-center"
+                      >
+                        Rename / Edit
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => handleToggleActive(doc.id, doc.is_active)}
+                        className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg border min-h-[40px] text-center ${
+                          doc.is_active
+                            ? 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100'
+                            : 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
+                        }`}
+                      >
+                        {doc.is_active ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>

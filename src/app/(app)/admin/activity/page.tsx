@@ -127,9 +127,9 @@ export default async function AdminActivityPage(props: ActivityPageProps) {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Banner & Header */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               System Activity &amp; Audit Log
             </h1>
@@ -242,18 +242,18 @@ export default async function AdminActivityPage(props: ActivityPageProps) {
           </div>
 
           {/* Apply Filter Button & Reset */}
-          <div className="md:col-span-12 flex items-center justify-between pt-2 border-t border-slate-100">
+          <div className="md:col-span-12 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
             <div className="flex items-center gap-2">
               <button
                 type="submit"
-                className="px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors focus:outline-hidden focus:ring-2 focus:ring-slate-500 min-h-[36px]"
+                className="px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors focus:outline-hidden focus:ring-2 focus:ring-slate-500 min-h-[40px]"
               >
                 Apply Filters
               </button>
               {hasActiveFilters && (
                 <Link
                   href="/admin/activity"
-                  className="px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:underline"
+                  className="px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:underline min-h-[40px] flex items-center"
                 >
                   Reset all filters
                 </Link>
@@ -290,115 +290,198 @@ export default async function AdminActivityPage(props: ActivityPageProps) {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-600">
-              <thead className="bg-slate-50 text-2xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
-                <tr>
-                  <th scope="col" className="px-4 py-3 whitespace-nowrap">Timestamp (IST)</th>
-                  <th scope="col" className="px-4 py-3 whitespace-nowrap">Actor</th>
-                  <th scope="col" className="px-4 py-3 whitespace-nowrap">Event / Action</th>
-                  <th scope="col" className="px-4 py-3">Description &amp; Context</th>
-                  <th scope="col" className="px-4 py-3 whitespace-nowrap">Entity Category</th>
-                  <th scope="col" className="px-4 py-3 text-right whitespace-nowrap">Target Entity</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {rows.map((row) => {
-                  const formatted = formatActivityLog(
-                    row.action,
-                    row.entity_type,
-                    row.entity_id,
-                    row.details
-                  )
-                  const actor = row.profiles
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-600">
+                <thead className="bg-slate-50 text-2xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th scope="col" className="px-4 py-3 whitespace-nowrap">Timestamp (IST)</th>
+                    <th scope="col" className="px-4 py-3 whitespace-nowrap">Actor</th>
+                    <th scope="col" className="px-4 py-3 whitespace-nowrap">Event / Action</th>
+                    <th scope="col" className="px-4 py-3">Description &amp; Context</th>
+                    <th scope="col" className="px-4 py-3 whitespace-nowrap">Entity Category</th>
+                    <th scope="col" className="px-4 py-3 text-right whitespace-nowrap">Target Entity</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {rows.map((row) => {
+                    const formatted = formatActivityLog(
+                      row.action,
+                      row.entity_type,
+                      row.entity_id,
+                      row.details
+                    )
+                    const actor = row.profiles
 
-                  return (
-                    <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
-                      {/* Timestamp */}
-                      <td className="px-4 py-3.5 whitespace-nowrap text-slate-700 font-mono text-2xs">
-                        {formatDateTimeIST(row.created_at)}
-                      </td>
+                    return (
+                      <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
+                        {/* Timestamp */}
+                        <td className="px-4 py-3.5 whitespace-nowrap text-slate-700 font-mono text-2xs">
+                          {formatDateTimeIST(row.created_at)}
+                        </td>
 
-                      {/* Actor */}
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        {actor ? (
-                          <div>
-                            <div className="font-semibold text-slate-900">{actor.full_name}</div>
-                            <div className="text-2xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-                              <span className="uppercase font-bold tracking-wider px-1 py-0.2 rounded bg-slate-100 border border-slate-200">
-                                {actor.role}
-                              </span>
-                              <span>{actor.email}</span>
+                        {/* Actor */}
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          {actor ? (
+                            <div>
+                              <div className="font-semibold text-slate-900">{actor.full_name}</div>
+                              <div className="text-2xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                <span className="uppercase font-bold tracking-wider px-1 py-0.2 rounded bg-slate-100 border border-slate-200">
+                                  {actor.role}
+                                </span>
+                                <span>{actor.email}</span>
+                              </div>
                             </div>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 italic">System Trigger</span>
-                        )}
-                      </td>
+                          ) : (
+                            <span className="text-slate-400 italic">System Trigger</span>
+                          )}
+                        </td>
 
-                      {/* Event / Action */}
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-2xs font-bold border ${formatted.badgeColor.bg} ${formatted.badgeColor.text} ${formatted.badgeColor.border}`}
-                        >
-                          {row.action}
-                        </span>
-                      </td>
-
-                      {/* Description & Context */}
-                      <td className="px-4 py-3.5">
-                        <div className="font-semibold text-slate-900">{formatted.title}</div>
-                        <div className="text-xs text-slate-600 mt-0.5">{formatted.description}</div>
-
-                        {/* Collapsible details for raw inspection */}
-                        {row.details && Object.keys(row.details).length > 0 && (
-                          <details className="mt-1.5 group">
-                            <summary className="text-2xs text-blue-600 hover:text-blue-800 cursor-pointer select-none">
-                              View raw payload ({Object.keys(row.details).length} fields)
-                            </summary>
-                            <pre className="mt-1.5 p-2 bg-slate-900 text-slate-100 rounded text-2xs overflow-x-auto max-w-lg font-mono">
-                              {JSON.stringify(row.details, null, 2)}
-                            </pre>
-                          </details>
-                        )}
-                      </td>
-
-                      {/* Entity Category */}
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-2xs font-medium">
-                          {row.entity_type}
-                        </span>
-                      </td>
-
-                      {/* Target Entity Link */}
-                      <td className="px-4 py-3.5 whitespace-nowrap text-right">
-                        {formatted.entityLink ? (
-                          <Link
-                            href={formatted.entityLink.href}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 rounded border border-blue-200 transition-colors"
+                        {/* Event / Action */}
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-2xs font-bold border ${formatted.badgeColor.bg} ${formatted.badgeColor.text} ${formatted.badgeColor.border}`}
                           >
-                            <span>{formatted.entityLink.label}</span>
-                            <span aria-hidden="true">&rarr;</span>
-                          </Link>
-                        ) : row.entity_id ? (
-                          <span className="text-2xs text-slate-400 font-mono" title={row.entity_id}>
-                            {row.entity_id.slice(0, 8)}...
+                            {row.action}
                           </span>
-                        ) : (
-                          <span className="text-slate-400">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+
+                        {/* Description & Context */}
+                        <td className="px-4 py-3.5">
+                          <div className="font-semibold text-slate-900">{formatted.title}</div>
+                          <div className="text-xs text-slate-600 mt-0.5">{formatted.description}</div>
+
+                          {/* Collapsible details for raw inspection */}
+                          {row.details && Object.keys(row.details).length > 0 && (
+                            <details className="mt-1.5 group">
+                              <summary className="text-2xs text-blue-600 hover:text-blue-800 cursor-pointer select-none">
+                                View raw payload ({Object.keys(row.details).length} fields)
+                              </summary>
+                              <pre className="mt-1.5 p-2 bg-slate-900 text-slate-100 rounded text-2xs overflow-x-auto max-w-lg font-mono">
+                                {JSON.stringify(row.details, null, 2)}
+                              </pre>
+                            </details>
+                          )}
+                        </td>
+
+                        {/* Entity Category */}
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-2xs font-medium">
+                            {row.entity_type}
+                          </span>
+                        </td>
+
+                        {/* Target Entity Link */}
+                        <td className="px-4 py-3.5 whitespace-nowrap text-right">
+                          {formatted.entityLink ? (
+                            <Link
+                              href={formatted.entityLink.href}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 rounded border border-blue-200 transition-colors"
+                            >
+                              <span>{formatted.entityLink.label}</span>
+                              <span aria-hidden="true">&rarr;</span>
+                            </Link>
+                          ) : row.entity_id ? (
+                            <span className="text-2xs text-slate-400 font-mono" title={row.entity_id}>
+                              {row.entity_id.slice(0, 8)}...
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Stacked Cards View */}
+            <div className="block md:hidden divide-y divide-slate-100">
+              {rows.map((row) => {
+                const formatted = formatActivityLog(
+                  row.action,
+                  row.entity_type,
+                  row.entity_id,
+                  row.details
+                )
+                const actor = row.profiles
+
+                return (
+                  <div key={row.id} className="p-4 space-y-2.5 hover:bg-slate-50/50 transition-colors">
+                    <div className="flex items-start justify-between gap-2">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-2xs font-bold border ${formatted.badgeColor.bg} ${formatted.badgeColor.text} ${formatted.badgeColor.border}`}
+                      >
+                        {row.action}
+                      </span>
+                      <span className="text-slate-500 font-mono text-2xs">
+                        {formatDateTimeIST(row.created_at)}
+                      </span>
+                    </div>
+
+                    <div>
+                      <div className="text-xs font-semibold text-slate-900">{formatted.title}</div>
+                      <div className="text-xs text-slate-600 mt-0.5">{formatted.description}</div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-2xs text-slate-600 bg-slate-50 rounded-lg p-2 border border-slate-100">
+                      <span className="font-semibold text-slate-700">By:</span>
+                      {actor ? (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-semibold text-slate-900">{actor.full_name}</span>
+                          <span className="uppercase font-bold tracking-wider px-1 py-0.5 rounded bg-slate-200 text-slate-700 text-[10px]">
+                            {actor.role}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="italic text-slate-400">System Trigger</span>
+                      )}
+                    </div>
+
+                    {/* Raw payload toggle */}
+                    {row.details && Object.keys(row.details).length > 0 && (
+                      <details className="mt-1 group">
+                        <summary className="text-2xs text-blue-600 hover:text-blue-800 cursor-pointer select-none py-1">
+                          View raw payload ({Object.keys(row.details).length} fields)
+                        </summary>
+                        <pre className="mt-1 p-2 bg-slate-900 text-slate-100 rounded text-2xs overflow-x-auto max-w-full font-mono">
+                          {JSON.stringify(row.details, null, 2)}
+                        </pre>
+                      </details>
+                    )}
+
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-2xs font-medium">
+                        {row.entity_type}
+                      </span>
+                      {formatted.entityLink ? (
+                        <Link
+                          href={formatted.entityLink.href}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 rounded border border-blue-200 transition-colors"
+                        >
+                          <span>{formatted.entityLink.label}</span>
+                          <span aria-hidden="true">&rarr;</span>
+                        </Link>
+                      ) : row.entity_id ? (
+                        <span className="text-2xs text-slate-400 font-mono" title={row.entity_id}>
+                          {row.entity_id.slice(0, 8)}...
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-2xs">—</span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
 
         {/* Pagination Bar */}
         {totalCount !== null && totalCount > 0 && (
-          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
             <div>
               Showing <span className="font-semibold text-slate-900">{fromIndex + 1}</span> to{' '}
               <span className="font-semibold text-slate-900">
@@ -411,12 +494,12 @@ export default async function AdminActivityPage(props: ActivityPageProps) {
               {currentPage > 1 ? (
                 <Link
                   href={`/admin/activity?page=${currentPage - 1}${userFilter !== 'all' ? `&user_id=${userFilter}` : ''}${actionFilter !== 'all' ? `&action=${actionFilter}` : ''}${entityTypeFilter !== 'all' ? `&entity_type=${entityTypeFilter}` : ''}${dateFrom ? `&date_from=${dateFrom}` : ''}${dateTo ? `&date_to=${dateTo}` : ''}`}
-                  className="px-2.5 py-1.5 rounded border border-slate-300 bg-white hover:bg-slate-50 font-medium text-slate-700 transition-colors"
+                  className="px-3 py-1.5 rounded border border-slate-300 bg-white hover:bg-slate-50 font-medium text-slate-700 transition-colors min-h-[36px] flex items-center"
                 >
                   Previous
                 </Link>
               ) : (
-                <span className="px-2.5 py-1.5 rounded border border-slate-200 bg-slate-100 font-medium text-slate-400 cursor-not-allowed">
+                <span className="px-3 py-1.5 rounded border border-slate-200 bg-slate-100 font-medium text-slate-400 cursor-not-allowed min-h-[36px] flex items-center">
                   Previous
                 </span>
               )}
@@ -428,12 +511,12 @@ export default async function AdminActivityPage(props: ActivityPageProps) {
               {currentPage < totalPages ? (
                 <Link
                   href={`/admin/activity?page=${currentPage + 1}${userFilter !== 'all' ? `&user_id=${userFilter}` : ''}${actionFilter !== 'all' ? `&action=${actionFilter}` : ''}${entityTypeFilter !== 'all' ? `&entity_type=${entityTypeFilter}` : ''}${dateFrom ? `&date_from=${dateFrom}` : ''}${dateTo ? `&date_to=${dateTo}` : ''}`}
-                  className="px-2.5 py-1.5 rounded border border-slate-300 bg-white hover:bg-slate-50 font-medium text-slate-700 transition-colors"
+                  className="px-3 py-1.5 rounded border border-slate-300 bg-white hover:bg-slate-50 font-medium text-slate-700 transition-colors min-h-[36px] flex items-center"
                 >
                   Next
                 </Link>
               ) : (
-                <span className="px-2.5 py-1.5 rounded border border-slate-200 bg-slate-100 font-medium text-slate-400 cursor-not-allowed">
+                <span className="px-3 py-1.5 rounded border border-slate-200 bg-slate-100 font-medium text-slate-400 cursor-not-allowed min-h-[36px] flex items-center">
                   Next
                 </span>
               )}

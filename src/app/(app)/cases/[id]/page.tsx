@@ -36,16 +36,16 @@ export async function generateMetadata(props: CaseDetailPageProps): Promise<Meta
 }
 
 export default async function CaseDetailPage(props: CaseDetailPageProps) {
-  const params = await props.params
+  const [params, role, supabase] = await Promise.all([
+    props.params,
+    getCurrentUserRole(),
+    createClient(),
+  ])
   const caseId = params.id
-
-  const role = await getCurrentUserRole()
   const isAdmin = role === 'admin'
 
-  const supabase = await createClient()
-
   // 1. Fetch case status and metrics from calculated view
-  const { data: caseRecord, error: caseError } = await supabase
+  const caseRecordQuery = supabase
     .from('case_status')
     .select(
       `
@@ -71,19 +71,7 @@ export default async function CaseDetailPage(props: CaseDetailPageProps) {
     .eq('case_id', caseId)
     .single()
 
-  if (caseError || !caseRecord) {
-    notFound()
-  }
-
-  // 2. Fetch firm contact info for reminder emails
-  const { data: firmRecord } = await supabase
-    .from('firms')
-    .select('contact_person, contact_email, contact_phone')
-    .eq('id', caseRecord.firm_id)
-    .single()
-
-  // 3. Fetch documents from case_document_status view
-  const { data: documentsData } = await supabase
+  const documentsQuery = supabase
     .from('case_document_status')
     .select(
       `
@@ -97,33 +85,32 @@ export default async function CaseDetailPage(props: CaseDetailPageProps) {
       received_by,
       notes,
       created_at,
-      status
+      status,
+      file_url,
+      file_name,
+      file_size,
+      file_type
     `
     )
     .eq('case_id', caseId)
     .order('is_required', { ascending: false })
     .order('document_type_name', { ascending: true })
 
-  // 4. Fetch active team members for assignee dropdown
-  const { data: staffMembers } = await supabase
+  const staffMembersQuery = supabase
     .from('profiles')
     .select('id, full_name')
     .eq('is_active', true)
     .order('full_name', { ascending: true })
 
-  // 5. Fetch active document types for adding documents to case
-  const { data: availableDocumentTypes } = await supabase
+  const availableDocumentTypesQuery = supabase
     .from('document_types')
     .select('id, name, description')
     .eq('is_active', true)
     .order('name', { ascending: true })
 
-  // 6. Fetch distinct recipient suggestions for outward dispatch autocomplete
-  const { data: recipientData } = await supabase.rpc('get_distinct_recipients')
-  const distinctRecipients = (recipientData as string[]) || []
+  const recipientQuery = supabase.rpc('get_distinct_recipients')
 
-  // 7. Fetch outward dispatches history for this case
-  const { data: dispatchesData } = await supabase
+  const dispatchesQuery = supabase
     .from('dispatches')
     .select(`
       id,
@@ -132,6 +119,8 @@ export default async function CaseDetailPage(props: CaseDetailPageProps) {
       sent_at,
       recorded_by,
       email_reference,
+      receipt_file_url,
+      receipt_file_name,
       idempotency_key,
       voided_at,
       voided_by,
@@ -151,6 +140,34 @@ export default async function CaseDetailPage(props: CaseDetailPageProps) {
     `)
     .eq('case_id', caseId)
     .order('sent_at', { ascending: false })
+
+  const [
+    { data: caseRecord, error: caseError },
+    { data: documentsData },
+    { data: staffMembers },
+    { data: availableDocumentTypes },
+    { data: recipientData },
+    { data: dispatchesData },
+  ] = await Promise.all([
+    caseRecordQuery,
+    documentsQuery,
+    staffMembersQuery,
+    availableDocumentTypesQuery,
+    recipientQuery,
+    dispatchesQuery,
+  ])
+
+  if (caseError || !caseRecord) {
+    notFound()
+  }
+
+  // 2. Fetch firm contact info for reminder emails
+  const { data: firmRecord } = await supabase
+    .from('firms')
+    .select('contact_person, contact_email, contact_phone')
+    .eq('id', caseRecord.firm_id)
+    .single()
+  const distinctRecipients = (recipientData as string[]) || []
 
   const caseHeaderData = caseRecord as unknown as CaseHeaderData
   const documents = (documentsData as unknown as CaseDocumentItem[]) || []

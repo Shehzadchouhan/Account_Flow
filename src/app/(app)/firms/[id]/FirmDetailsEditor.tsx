@@ -70,7 +70,7 @@ export function FirmDetailsEditor({ firm, staffMembers, isAdmin }: FirmDetailsEd
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-6">
+    <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-4 sm:space-y-6">
       {/* Header with Title, Status, and Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
@@ -84,7 +84,7 @@ export function FirmDetailsEditor({ firm, staffMembers, isAdmin }: FirmDetailsEd
         </div>
 
         {isAdmin && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {!isEditing ? (
               <button
                 type="button"

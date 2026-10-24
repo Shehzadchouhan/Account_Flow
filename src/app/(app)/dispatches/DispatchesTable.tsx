@@ -14,6 +14,8 @@ export interface GlobalDispatchItem {
   recorded_by: string
   email_reference: string | null
   idempotency_key: string | null
+  receipt_file_url?: string | null
+  receipt_file_name?: string | null
   voided_at: string | null
   voided_by: string | null
   void_reason: string | null
@@ -99,7 +101,8 @@ export function DispatchesTable({ dispatches, isAdmin }: DispatchesTableProps) {
 
   return (
     <>
-      <div className="overflow-x-auto">
+      {/* Desktop Table View (hidden on mobile, visible on md+) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
@@ -240,28 +243,158 @@ export function DispatchesTable({ dispatches, isAdmin }: DispatchesTableProps) {
         </table>
       </div>
 
+      {/* Mobile Stacked Dispatch Cards (visible on mobile, hidden on md+) */}
+      <div className="block md:hidden divide-y divide-slate-100">
+        {dispatches.map((disp) => {
+          const isVoided = Boolean(disp.voided_at)
+          const firmName = disp.case?.firm?.name || 'Firm'
+          const month = formatMonthYear(disp.case?.period_month)
+          const cycle = disp.case?.cycle === 'A_11th' ? 'Cycle A' : 'Cycle B'
+          const allDocs = disp.dispatch_items || []
+          const activeDocs = allDocs.filter((d) => d.is_active)
+
+          return (
+            <div
+              key={`mobile-${disp.id}`}
+              className={`p-4 space-y-3 transition-colors ${
+                isVoided ? 'bg-rose-50/20' : 'bg-white'
+              }`}
+            >
+              {/* Header: Recipient & Status */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="font-bold text-slate-900 text-sm block truncate">
+                    {disp.recipient}
+                  </span>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    {firmName} &bull; {month} ({cycle})
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  {isVoided ? (
+                    <StatusBadge status="VOIDED" size="sm" />
+                  ) : (
+                    <span className="inline-flex items-center gap-1 font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-2xs">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                      <span>ACTIVE</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Details Box */}
+              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 space-y-2 text-xs">
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Sent At (IST):</span>
+                  <span className="font-medium text-slate-800">
+                    {formatDateTimeIST(disp.sent_at)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Recorded By:</span>
+                  <span className="font-medium text-slate-800">
+                    {disp.recorder?.full_name || 'Staff Member'}
+                  </span>
+                </div>
+
+                {disp.email_reference && (
+                  <div className="pt-1 border-t border-slate-200/60 text-slate-600">
+                    <span className="font-medium text-slate-700">Reference: </span>
+                    <span className="text-slate-800">{disp.email_reference}</span>
+                  </div>
+                )}
+
+                {/* Document Tags */}
+                <div className="pt-1 border-t border-slate-200/60">
+                  <span className="text-2xs font-semibold text-slate-500 uppercase block mb-1">
+                    Documents ({isVoided ? `${allDocs.length} voided` : `${activeDocs.length} active`}):
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {allDocs.map((item) => (
+                      <span
+                        key={item.id}
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-2xs font-medium border ${
+                          isVoided
+                            ? 'bg-rose-50 text-rose-800 border-rose-200 line-through opacity-75'
+                            : 'bg-white text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {item.case_document?.document_type?.name || 'Doc'}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Postal / Courier Receipt */}
+                {disp.receipt_file_url && (
+                  <div className="pt-1 border-t border-slate-200/60">
+                    <a
+                      href={disp.receipt_file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200"
+                    >
+                      <span>📄 Receipt: {disp.receipt_file_name || 'View Scan'} &rarr;</span>
+                    </a>
+                  </div>
+                )}
+
+                {/* Void reason banner if voided */}
+                {isVoided && disp.void_reason && (
+                  <div className="p-2 rounded bg-rose-50 border border-rose-200 text-rose-900 text-2xs">
+                    <strong>Void Reason:</strong> {disp.void_reason}{' '}
+                    {disp.voider?.full_name && `(by ${disp.voider.full_name})`}
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons Toolbar */}
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <Link
+                  href={`/cases/${disp.case_id}`}
+                  className="inline-flex items-center px-3 py-1.5 font-medium text-xs text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg min-h-[36px] transition-colors"
+                >
+                  <span>View Case &rarr;</span>
+                </Link>
+
+                {!isVoided && isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenVoidModal(disp)}
+                    className="inline-flex items-center px-3 py-1.5 font-semibold text-xs text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg min-h-[36px] transition-colors"
+                  >
+                    <span>Void Dispatch</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
       {/* Admin Void Confirmation Modal */}
       {selectedVoidDispatch && (
         <div
-          className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+          className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6"
           role="dialog"
           aria-modal="true"
           aria-labelledby="global-void-title"
         >
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-rose-700 to-red-800 px-6 py-5 text-white">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden my-auto">
+            <div className="bg-gradient-to-r from-rose-700 to-red-800 px-4 sm:px-6 py-4 sm:py-5 text-white shrink-0">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/10 rounded-lg">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-2 bg-white/10 rounded-lg shrink-0">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                   </div>
-                  <div>
-                    <h3 id="global-void-title" className="text-lg font-bold">
+                  <div className="min-w-0">
+                    <h3 id="global-void-title" className="text-base sm:text-lg font-bold truncate">
                       Void Outward Dispatch
                     </h3>
-                    <p className="text-xs text-rose-100">
+                    <p className="text-xs text-rose-100 truncate">
                       Recipient: {selectedVoidDispatch.recipient}
                     </p>
                   </div>
@@ -270,7 +403,7 @@ export function DispatchesTable({ dispatches, isAdmin }: DispatchesTableProps) {
                   type="button"
                   onClick={handleCloseVoidModal}
                   disabled={isVoiding}
-                  className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10"
+                  className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 shrink-0"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -279,7 +412,7 @@ export function DispatchesTable({ dispatches, isAdmin }: DispatchesTableProps) {
               </div>
             </div>
 
-            <form onSubmit={handleConfirmVoid} className="p-6 space-y-4">
+            <form onSubmit={handleConfirmVoid} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
               {voidError && (
                 <div className="p-3 bg-red-50 border-l-4 border-red-500 rounded text-xs text-red-800 font-medium">
                   {voidError}
@@ -310,19 +443,19 @@ export function DispatchesTable({ dispatches, isAdmin }: DispatchesTableProps) {
                 <p className="text-2xs text-slate-500 mt-1">Minimum 5 characters explaining the correction</p>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-4 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={handleCloseVoidModal}
                   disabled={isVoiding}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 min-h-[44px]"
+                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 min-h-[44px] text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isVoiding || voidReason.trim().length < 5}
-                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 min-h-[44px]"
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 min-h-[44px]"
                 >
                   {isVoiding ? (
                     <>

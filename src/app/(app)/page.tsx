@@ -55,18 +55,18 @@ export default async function DashboardPage(props: DashboardPageProps) {
   const selectedMonth = searchParams.month || defaultMonth
   const todayIST = getTodayIST()
 
-  const role = await getCurrentUserRole()
+  const [role, supabase] = await Promise.all([
+    getCurrentUserRole(),
+    createClient(),
+  ])
   const isAdmin = role === 'admin'
-  const supabase = await createClient()
 
-  // 1. Fetch Distinct Active Firms Count (Firm-level)
-  const { count: activeFirmsCount } = await supabase
+  const activeFirmsQuery = supabase
     .from('firms')
     .select('id', { count: 'exact', head: true })
     .eq('is_active', true)
 
-  // 2. Fetch Cases for Selected Month (Active Firms Only) from case_status view
-  const { data: monthCasesRaw } = await supabase
+  const monthCasesQuery = supabase
     .from('case_status')
     .select(
       `
@@ -85,10 +85,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
     .eq('period_month', selectedMonth)
     .eq('firm_is_active', true)
 
-  const monthCases = monthCasesRaw || []
-
-  // 3. Fetch Documents for Selected Month (Active Firms Only) from case_document_status view
-  const { data: monthDocsRaw } = await supabase
+  const monthDocsQuery = supabase
     .from('case_document_status')
     .select(
       `
@@ -104,15 +101,26 @@ export default async function DashboardPage(props: DashboardPageProps) {
     .eq('period_month', selectedMonth)
     .eq('firm_is_active', true)
 
-  const monthDocs = monthDocsRaw || []
-
-  // 4. Fetch Staff Members for Workload Table
-  const { data: staffListRaw } = await supabase
+  const staffListQuery = supabase
     .from('profiles')
     .select('id, full_name, email, role')
     .eq('is_active', true)
     .order('full_name', { ascending: true })
 
+  const [
+    { count: activeFirmsCount },
+    { data: monthCasesRaw },
+    { data: monthDocsRaw },
+    { data: staffListRaw },
+  ] = await Promise.all([
+    activeFirmsQuery,
+    monthCasesQuery,
+    monthDocsQuery,
+    staffListQuery,
+  ])
+
+  const monthCases = monthCasesRaw || []
+  const monthDocs = monthDocsRaw || []
   const staffList = staffListRaw || []
 
   // ---------------------------------------------------------------------------
@@ -230,9 +238,9 @@ export default async function DashboardPage(props: DashboardPageProps) {
   return (
     <div className="space-y-6">
       {/* Top Banner: Overview & Month Selector */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-1.5 flex items-center justify-center shrink-0">
+          <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-1.5 flex items-center justify-center shrink-0">
             <Image
               src="/logo-icon.png"
               alt="FinanceFlow"
@@ -243,7 +251,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
             />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
               Operations Dashboard
             </h1>
             <p className="text-xs text-slate-500">
@@ -253,13 +261,13 @@ export default async function DashboardPage(props: DashboardPageProps) {
         </div>
 
         {/* Month Selector Form */}
-        <div className="flex items-center gap-2.5">
-          <form method="GET" action="/" className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <form method="GET" action="/" className="flex items-center gap-2 flex-1 sm:flex-initial">
             <select
               id="month-select"
               name="month"
               defaultValue={selectedMonth}
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 text-slate-900 bg-white hover:border-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[38px] shadow-2xs"
+              className="w-full sm:w-auto px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 text-slate-900 bg-white hover:border-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[38px] shadow-2xs"
             >
               {monthOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -269,7 +277,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
             </select>
             <button
               type="submit"
-              className="px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors min-h-[38px]"
+              className="px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors min-h-[38px] shrink-0"
             >
               Update
             </button>
@@ -278,7 +286,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
           {isAdmin && (
             <Link
               href="/admin/generate-cases"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors whitespace-nowrap min-h-[38px]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors whitespace-nowrap min-h-[38px]"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -593,106 +601,188 @@ export default async function DashboardPage(props: DashboardPageProps) {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
-                <tr>
-                  <th scope="col" className="px-4 py-3">Employee Name</th>
-                  <th scope="col" className="px-4 py-3 text-center">Assigned Cases</th>
-                  <th scope="col" className="px-4 py-3 text-center">Awaiting Docs</th>
-                  <th scope="col" className="px-4 py-3 text-center">Pending Dispatch</th>
-                  <th scope="col" className="px-4 py-3 text-center">Completed</th>
-                  <th scope="col" className="px-4 py-3 text-center">Overdue Cases</th>
-                  <th scope="col" className="px-4 py-3 text-center">Pending Docs</th>
-                  <th scope="col" className="px-4 py-3 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {workloadRows.map((row) => (
-                  <tr key={row.id || 'unassigned'} className="hover:bg-slate-50/80 transition-colors">
-                    {/* Name & Role */}
-                    <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <span>{row.name}</span>
-                        {row.id === null ? (
-                          <span className="px-1.5 py-0.5 text-2xs font-bold rounded bg-amber-100 text-amber-800 border border-amber-300">
-                            UNASSIGNED
+          <>
+            {/* Desktop Table View (hidden on mobile, visible on md+) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-600">
+                <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th scope="col" className="px-4 py-3">Employee Name</th>
+                    <th scope="col" className="px-4 py-3 text-center">Assigned Cases</th>
+                    <th scope="col" className="px-4 py-3 text-center">Awaiting Docs</th>
+                    <th scope="col" className="px-4 py-3 text-center">Pending Dispatch</th>
+                    <th scope="col" className="px-4 py-3 text-center">Completed</th>
+                    <th scope="col" className="px-4 py-3 text-center">Overdue Cases</th>
+                    <th scope="col" className="px-4 py-3 text-center">Pending Docs</th>
+                    <th scope="col" className="px-4 py-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {workloadRows.map((row) => (
+                    <tr key={row.id || 'unassigned'} className="hover:bg-slate-50/80 transition-colors">
+                      {/* Name & Role */}
+                      <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span>{row.name}</span>
+                          {row.id === null ? (
+                            <span className="px-1.5 py-0.5 text-2xs font-bold rounded bg-amber-100 text-amber-800 border border-amber-300">
+                              UNASSIGNED
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 text-2xs font-semibold uppercase rounded bg-slate-100 text-slate-600 border border-slate-200">
+                              {row.role}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Total Cases */}
+                      <td className="px-4 py-3 text-center font-bold text-slate-900 whitespace-nowrap">
+                        {row.totalCases}
+                      </td>
+
+                      {/* Awaiting Docs */}
+                      <td className="px-4 py-3 text-center whitespace-nowrap">
+                        {row.awaitingDocs > 0 ? (
+                          <span className="font-semibold text-amber-700">{row.awaitingDocs}</span>
+                        ) : (
+                          <span className="text-slate-400">&mdash;</span>
+                        )}
+                      </td>
+
+                      {/* Pending Dispatch */}
+                      <td className="px-4 py-3 text-center whitespace-nowrap">
+                        {row.pendingDispatch > 0 ? (
+                          <span className="font-semibold text-blue-700">{row.pendingDispatch}</span>
+                        ) : (
+                          <span className="text-slate-400">&mdash;</span>
+                        )}
+                      </td>
+
+                      {/* Completed */}
+                      <td className="px-4 py-3 text-center whitespace-nowrap">
+                        {row.completed > 0 ? (
+                          <span className="font-semibold text-emerald-700">{row.completed}</span>
+                        ) : (
+                          <span className="text-slate-400">&mdash;</span>
+                        )}
+                      </td>
+
+                      {/* Overdue Cases */}
+                      <td className="px-4 py-3 text-center whitespace-nowrap">
+                        {row.overdueCases > 0 ? (
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800 border border-red-300">
+                            {row.overdueCases}
                           </span>
                         ) : (
-                          <span className="px-1.5 py-0.5 text-2xs font-semibold uppercase rounded bg-slate-100 text-slate-600 border border-slate-200">
-                            {row.role}
-                          </span>
+                          <span className="text-emerald-600 text-xs font-semibold">0</span>
                         )}
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Total Cases */}
-                    <td className="px-4 py-3 text-center font-bold text-slate-900 whitespace-nowrap">
-                      {row.totalCases}
-                    </td>
+                      {/* Pending Docs */}
+                      <td className="px-4 py-3 text-center whitespace-nowrap font-medium text-slate-800">
+                        {row.pendingDocs}
+                      </td>
 
-                    {/* Awaiting Docs */}
-                    <td className="px-4 py-3 text-center whitespace-nowrap">
-                      {row.awaitingDocs > 0 ? (
-                        <span className="font-semibold text-amber-700">{row.awaitingDocs}</span>
-                      ) : (
-                        <span className="text-slate-400">&mdash;</span>
-                      )}
-                    </td>
+                      {/* Action Links */}
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <Link
+                          href={
+                            row.id === null
+                              ? `/cases?month=${selectedMonth}&employee=unassigned`
+                              : `/cases?month=${selectedMonth}&employee=${row.id}`
+                          }
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          <span>Inspect cases</span>
+                          <span aria-hidden="true">&rarr;</span>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                    {/* Pending Dispatch */}
-                    <td className="px-4 py-3 text-center whitespace-nowrap">
-                      {row.pendingDispatch > 0 ? (
-                        <span className="font-semibold text-blue-700">{row.pendingDispatch}</span>
-                      ) : (
-                        <span className="text-slate-400">&mdash;</span>
-                      )}
-                    </td>
-
-                    {/* Completed */}
-                    <td className="px-4 py-3 text-center whitespace-nowrap">
-                      {row.completed > 0 ? (
-                        <span className="font-semibold text-emerald-700">{row.completed}</span>
-                      ) : (
-                        <span className="text-slate-400">&mdash;</span>
-                      )}
-                    </td>
-
-                    {/* Overdue Cases */}
-                    <td className="px-4 py-3 text-center whitespace-nowrap">
-                      {row.overdueCases > 0 ? (
-                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800 border border-red-300">
-                          {row.overdueCases}
+            {/* Mobile Stacked Card View (visible on mobile, hidden on md+) */}
+            <div className="block md:hidden divide-y divide-slate-100">
+              {workloadRows.map((row) => (
+                <div key={row.id || 'unassigned-mobile'} className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                      <span>{row.name}</span>
+                      {row.id === null ? (
+                        <span className="px-1.5 py-0.5 text-2xs font-bold rounded bg-amber-100 text-amber-800 border border-amber-300">
+                          UNASSIGNED
                         </span>
                       ) : (
-                        <span className="text-emerald-600 text-xs font-semibold">0</span>
+                        <span className="px-1.5 py-0.5 text-2xs font-semibold uppercase rounded bg-slate-100 text-slate-600 border border-slate-200">
+                          {row.role}
+                        </span>
                       )}
-                    </td>
+                    </div>
+                    <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
+                      {row.totalCases} {row.totalCases === 1 ? 'case' : 'cases'}
+                    </span>
+                  </div>
 
-                    {/* Pending Docs */}
-                    <td className="px-4 py-3 text-center whitespace-nowrap font-medium text-slate-800">
-                      {row.pendingDocs}
-                    </td>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                      <div className="text-2xs text-slate-400 uppercase font-semibold">Awaiting Docs</div>
+                      <div className="font-bold text-slate-800 mt-0.5">
+                        {row.awaitingDocs > 0 ? (
+                          <span className="text-amber-700 font-extrabold">{row.awaitingDocs}</span>
+                        ) : '0'}
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                      <div className="text-2xs text-slate-400 uppercase font-semibold">Pending Delivery</div>
+                      <div className="font-bold text-slate-800 mt-0.5">
+                        {row.pendingDispatch > 0 ? (
+                          <span className="text-blue-700 font-extrabold">{row.pendingDispatch}</span>
+                        ) : '0'}
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                      <div className="text-2xs text-slate-400 uppercase font-semibold">Completed</div>
+                      <div className="font-bold text-emerald-700 mt-0.5">
+                        {row.completed}
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                      <div className="text-2xs text-slate-400 uppercase font-semibold">Overdue</div>
+                      <div className="mt-0.5">
+                        {row.overdueCases > 0 ? (
+                          <span className="px-1.5 py-0.5 rounded text-2xs font-bold bg-red-100 text-red-800 border border-red-300">
+                            {row.overdueCases} past due
+                          </span>
+                        ) : (
+                          <span className="text-emerald-600 font-bold">0</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
 
-                    {/* Action Links */}
-                    <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <Link
-                        href={
-                          row.id === null
-                            ? `/cases?month=${selectedMonth}&employee=unassigned`
-                            : `/cases?month=${selectedMonth}&employee=${row.id}`
-                        }
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
-                      >
-                        <span>Inspect cases</span>
-                        <span aria-hidden="true">&rarr;</span>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  <div className="pt-1 flex items-center justify-between">
+                    <span className="text-xs text-slate-500">
+                      Pending docs: <strong className="text-slate-800">{row.pendingDocs}</strong>
+                    </span>
+                    <Link
+                      href={
+                        row.id === null
+                          ? `/cases?month=${selectedMonth}&employee=unassigned`
+                          : `/cases?month=${selectedMonth}&employee=${row.id}`
+                      }
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold border border-blue-200 transition-colors"
+                    >
+                      <span>Inspect cases</span>
+                      <span aria-hidden="true">&rarr;</span>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -111,26 +111,26 @@ export function RecordDispatchModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="record-dispatch-title"
     >
-      <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all my-8">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden transform transition-all my-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-700 to-indigo-800 px-6 py-5 text-white">
+        <div className="bg-gradient-to-r from-blue-700 to-indigo-800 px-4 sm:px-6 py-4 sm:py-5 text-white shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/10 rounded-lg">
+              <div className="p-2 bg-white/10 rounded-lg shrink-0">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
               </div>
-              <div>
-                <h2 id="record-dispatch-title" className="text-xl font-bold">
+              <div className="min-w-0">
+                <h2 id="record-dispatch-title" className="text-lg sm:text-xl font-bold truncate">
                   Record Outward Dispatch
                 </h2>
-                <p className="text-sm text-blue-100">
+                <p className="text-xs sm:text-sm text-blue-100 truncate">
                   {firmName} • {periodMonth} • {cycleLabel}
                 </p>
               </div>
@@ -139,7 +139,7 @@ export function RecordDispatchModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+              className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors shrink-0"
               aria-label="Close dialog"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -150,7 +150,7 @@ export function RecordDispatchModal({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-5 overflow-y-auto flex-1 min-h-0">
           {errorMsg && (
             <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-sm text-red-800 font-medium">
               <div className="flex items-center gap-2">
@@ -348,19 +348,19 @@ export function RecordDispatchModal({
           )}
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-4 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 disabled:opacity-50 min-h-[44px]"
+              className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 disabled:opacity-50 min-h-[44px] text-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || selectedDocIds.length === 0 || availableDocuments.length === 0}
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             >
               {isSubmitting ? (
                 <>

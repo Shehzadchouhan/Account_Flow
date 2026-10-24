@@ -61,6 +61,8 @@ export default async function DispatchesPage(props: DispatchesPageProps) {
       sent_at,
       recorded_by,
       email_reference,
+      receipt_file_url,
+      receipt_file_name,
       idempotency_key,
       voided_at,
       voided_by,
@@ -188,10 +190,10 @@ export default async function DispatchesPage(props: DispatchesPageProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <Link
             href="/cases"
-            className="inline-flex items-center gap-1.5 px-4 py-2 border border-blue-600 text-white bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-colors min-h-[40px] shadow-xs"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-blue-600 text-white bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-colors min-h-[40px] shadow-xs"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -387,7 +389,7 @@ export default async function DispatchesPage(props: DispatchesPageProps) {
 
         {/* Pagination Bar */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600 bg-slate-50">
+          <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 bg-slate-50">
             <div>
               Page <strong className="text-slate-900">{currentPage}</strong> of{' '}
               <strong className="text-slate-900">{totalPages}</strong>

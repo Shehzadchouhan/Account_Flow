@@ -35,7 +35,6 @@ export async function login(prevState: AuthState | null, formData: FormData): Pr
     return { error: message }
   }
 
-  revalidatePath('/', 'layout')
   redirect('/')
 }
 
@@ -50,6 +49,5 @@ export async function logout(): Promise<void> {
     console.error('Logout error:', err)
   }
 
-  revalidatePath('/', 'layout')
   redirect('/login')
 }

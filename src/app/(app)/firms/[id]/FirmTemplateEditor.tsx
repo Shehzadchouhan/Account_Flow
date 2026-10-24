@@ -104,7 +104,7 @@ export function FirmTemplateEditor({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-6">
+    <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-4 sm:space-y-6">
       {/* Title */}
       <div>
         <h2 className="text-lg font-bold text-slate-900">Document Checklist Template</h2>
@@ -224,69 +224,122 @@ export function FirmTemplateEditor({
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600 font-semibold text-xs uppercase tracking-wider">
-                <tr>
-                  <th scope="col" className="px-5 py-3">
-                    Document Type
-                  </th>
-                  <th scope="col" className="px-5 py-3">
-                    Description
-                  </th>
-                  <th scope="col" className="px-5 py-3">
-                    Requirement Rule
-                  </th>
-                  {isAdmin && (
-                    <th scope="col" className="px-5 py-3 text-right">
-                      Actions
+          <>
+            {/* Desktop Table View (hidden on mobile, visible on md+) */}
+            <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200">
+              <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+                <thead className="bg-slate-50 text-slate-600 font-semibold text-xs uppercase tracking-wider">
+                  <tr>
+                    <th scope="col" className="px-5 py-3">
+                      Document Type
                     </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {templateItems.map((item) => {
-                  const docName = item.document_types?.name || 'Unknown Document Type'
-                  const docDesc = item.document_types?.description || '—'
-                  const isPending = pendingItemId === item.id
+                    <th scope="col" className="px-5 py-3">
+                      Description
+                    </th>
+                    <th scope="col" className="px-5 py-3">
+                      Requirement Rule
+                    </th>
+                    {isAdmin && (
+                      <th scope="col" className="px-5 py-3 text-right">
+                        Actions
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {templateItems.map((item) => {
+                    const docName = item.document_types?.name || 'Unknown Document Type'
+                    const docDesc = item.document_types?.description || '—'
+                    const isPending = pendingItemId === item.id
 
-                  return (
-                    <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="px-5 py-3.5 whitespace-nowrap font-medium text-slate-900">
-                        {docName}
-                      </td>
-                      <td className="px-5 py-3.5 text-xs text-slate-500 max-w-xs truncate">
-                        {docDesc}
-                      </td>
-                      <td className="px-5 py-3.5 whitespace-nowrap">
-                        <StatusBadge status={item.is_required ? 'REQUIRED' : 'OPTIONAL'} size="sm" />
-                      </td>
-                      {isAdmin && (
-                        <td className="px-5 py-3.5 whitespace-nowrap text-right space-x-2">
-                          <button
-                            type="button"
-                            disabled={isPending}
-                            onClick={() => handleToggleRequired(item)}
-                            className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50 px-2 py-1 rounded-md hover:bg-blue-50"
-                          >
-                            Mark {item.is_required ? 'Optional' : 'Required'}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={isPending}
-                            onClick={() => handleRemove(item.id)}
-                            className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50 px-2 py-1 rounded-md hover:bg-red-50"
-                          >
-                            Remove
-                          </button>
+                    return (
+                      <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="px-5 py-3.5 whitespace-nowrap font-medium text-slate-900">
+                          {docName}
                         </td>
-                      )}
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                        <td className="px-5 py-3.5 text-xs text-slate-500 max-w-xs truncate">
+                          {docDesc}
+                        </td>
+                        <td className="px-5 py-3.5 whitespace-nowrap">
+                          <StatusBadge status={item.is_required ? 'REQUIRED' : 'OPTIONAL'} size="sm" />
+                        </td>
+                        {isAdmin && (
+                          <td className="px-5 py-3.5 whitespace-nowrap text-right space-x-2">
+                            <button
+                              type="button"
+                              disabled={isPending}
+                              onClick={() => handleToggleRequired(item)}
+                              className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50 px-2 py-1 rounded-md hover:bg-blue-50 min-h-[32px]"
+                            >
+                              Mark {item.is_required ? 'Optional' : 'Required'}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isPending}
+                              onClick={() => handleRemove(item.id)}
+                              className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50 px-2 py-1 rounded-md hover:bg-red-50 min-h-[32px]"
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Stacked Cards View (visible on mobile, hidden on md+) */}
+            <div className="block md:hidden divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+              {templateItems.map((item) => {
+                const docName = item.document_types?.name || 'Unknown Document Type'
+                const docDesc = item.document_types?.description || '—'
+                const isPending = pendingItemId === item.id
+
+                return (
+                  <div key={`mobile-${item.id}`} className="p-4 bg-white space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <span className="font-bold text-slate-900 text-sm block">
+                          {docName}
+                        </span>
+                        {docDesc !== '—' && (
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {docDesc}
+                          </p>
+                        )}
+                      </div>
+                      <div className="shrink-0">
+                        <StatusBadge status={item.is_required ? 'REQUIRED' : 'OPTIONAL'} size="sm" />
+                      </div>
+                    </div>
+
+                    {isAdmin && (
+                      <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => handleToggleRequired(item)}
+                          className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg min-h-[36px]"
+                        >
+                          Mark {item.is_required ? 'Optional' : 'Required'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => handleRemove(item.id)}
+                          className="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg min-h-[36px]"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>

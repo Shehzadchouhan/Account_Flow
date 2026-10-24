@@ -170,7 +170,7 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
 
         {/* Collapsible Mobile Navigation Dropdown */}
         {mobileMenuOpen && (
-          <div className="border-t border-slate-800 bg-slate-950 px-3 py-3 space-y-1 animate-in fade-in duration-150">
+          <div className="border-t border-slate-800 bg-slate-950 px-3 py-3 space-y-1 animate-in fade-in duration-150 max-h-[calc(100vh-60px)] overflow-y-auto">
             <nav aria-label="Mobile Navigation" className="space-y-1">
               {navItems.map((item) => {
                 const active = isActive(item.href)
@@ -336,18 +336,18 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
       {/* ========================================================= */}
       {/* Main Content Area */}
       {/* ========================================================= */}
-      <main className="flex-1 md:pl-64 flex flex-col min-h-screen">
-        {/* Top Sticky Header Bar with Global Search & Guide */}
-        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3 shadow-2xs">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex-1 max-w-xl">
+      <main className="flex-1 md:pl-64 flex flex-col min-h-screen w-full min-w-0 overflow-x-hidden">
+        {/* Top Header Bar with Global Search & Guide (Non-sticky on mobile to prevent double sticky header conflict) */}
+        <header className="static md:sticky md:top-0 z-30 bg-white border-b border-slate-200 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 shadow-2xs">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4">
+            <div className="flex-1 max-w-xl min-w-0">
               <GlobalSearch />
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsGuideOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 text-xs font-bold transition-colors shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 text-xs font-bold transition-colors shadow-2xs min-h-[38px]"
                 title="Open 5-Step Workflow Guide & Glossary"
               >
                 <span>📖</span>
@@ -367,7 +367,7 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
           </div>
         </header>
 
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <div className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto min-w-0">
           {children}
         </div>
       </main>
