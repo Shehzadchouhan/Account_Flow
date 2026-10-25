@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -98,7 +98,20 @@ interface AppLayoutNavProps {
 export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isGuideOpen, setIsGuideOpen] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
   const pathname = usePathname()
+
+  // Clear instant navigation indicator when the new page is ready
+  useEffect(() => {
+    setIsNavigating(false)
+  }, [pathname])
+
+  const handleNavClick = (href: string) => {
+    setMobileMenuOpen(false)
+    if (pathname !== href) {
+      setIsNavigating(true)
+    }
+  }
 
   const isActive = (href: string) => {
     if (href === '/') {
@@ -108,7 +121,14 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row text-slate-900">
+    <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row text-slate-900 relative">
+      {/* Instant Top Navigation Progress Bar */}
+      {isNavigating && (
+        <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-slate-900/10 overflow-hidden shadow-xs pointer-events-none">
+          <div className="h-full bg-gradient-to-r from-blue-600 via-cyan-400 to-blue-600 animate-nav-progress w-full" />
+        </div>
+      )}
+
       {/* Interactive Workflow Guide Modal */}
       <HowItWorksModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
 
@@ -117,7 +137,12 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
       {/* ========================================================= */}
       <header className="md:hidden bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-40">
         <div className="flex items-center justify-between px-4 py-3">
-          <Link href="/" className="flex items-center gap-2.5 group">
+          <Link
+            href="/"
+            prefetch={true}
+            onClick={() => handleNavClick('/')}
+            className="flex items-center gap-2.5 group"
+          >
             <div className="h-9 w-9 rounded-lg bg-white p-1 flex items-center justify-center shadow-xs shrink-0 border border-slate-700/50">
               <Image
                 src="/logo-icon.png"
@@ -179,7 +204,8 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
+                    prefetch={true}
+                    onClick={() => handleNavClick(item.href)}
                     aria-current={active ? 'page' : undefined}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       active
@@ -237,6 +263,8 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
         {/* Branding & Home Link */}
         <Link
           href="/"
+          prefetch={true}
+          onClick={() => handleNavClick('/')}
           className="px-5 py-4 border-b border-slate-800 flex items-center gap-3 group hover:bg-slate-800/40 transition-colors"
         >
           <div className="h-10 w-10 rounded-xl bg-white p-1.5 flex items-center justify-center shadow-sm shrink-0 border border-slate-700/60 group-hover:scale-105 transition-transform">
@@ -285,6 +313,8 @@ export function AppLayoutNav({ userEmail, userRole, children }: AppLayoutNavProp
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
+                onClick={() => handleNavClick(item.href)}
                 aria-current={active ? 'page' : undefined}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500 ${
                   active
